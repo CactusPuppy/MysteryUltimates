@@ -1,0 +1,212 @@
+import "settings.lobby";
+import "trackAbilityLockout.del";
+
+
+// FIXME: Remove this debug
+// import "../utils/ultRefill.del";
+import "stateMachine.del";
+
+
+playervar Hero trueHero;
+playervar Boolean hackedAbilityLockout;
+
+globalvar Boolean FORCE_NON_NATIVE_ULTIMATE = WorkshopSettingToggle("Settings", "Force Random Ultimate To Be Non-Native", true, 0);
+globalvar Boolean RANDOM_ULTIMATE_MATCHES_ROLE = WorkshopSettingToggle("Settings", "Force Random Ultimate To Match Role", false, 1);
+
+globalvar Boolean DEBUG_MODE = WorkshopSettingToggle("°DEBUG", "Debug Mode Enabled", false, 0);
+globalvar Boolean DEBUG_SHOULD_FORCE_ULTIMATE_HERO = WorkshopSettingToggle("°DEBUG", "Force Ultimate Hero", true, 1);
+globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero("°DEBUG", "Ultimate Hero to Force", Hero.Baptiste, 2);
+
+globalvar Hero[] placeableUltimateHeroes = [Hero.Baptiste, Hero.Symmetra, Hero.Lifeweaver];
+globalvar Hero[] ability1AllowedHeroes = [Hero.Dva];
+globalvar Hero[] ability2AllowedHeroes = [];
+
+// Rainbow code by PharingWell and Provoxin
+Number rSaturation: 0.5;
+Number rValue: 1.0;
+
+Number rMin(Number rSaturation = rSaturation, Number rValue = rValue): 255 * (1-rSaturation) * (rValue);
+Number rMax(Number rSaturation = rSaturation, Number rValue = rValue): 255 * rValue;
+Number rMod: (rMax() - rMin()) * 6;
+Number rOffset: rMax() - 2 * rMin();
+
+Number rainbow_R(Number t): Min(Max(AbsoluteValue(((t + (0*rMod)/3) % rMod) - rMod/2) - rOffset, rMin()), rMax());
+Number rainbow_G(Number t): Min(Max(AbsoluteValue(((t + (1*rMod)/3) % rMod) - rMod/2) - rOffset, rMin()), rMax());
+Number rainbow_B(Number t): Min(Max(AbsoluteValue(((t + (2*rMod)/3) % rMod) - rMod/2) - rOffset, rMin()), rMax());
+Color rainbow: CustomColor(rainbowVector.X, rainbowVector.Y, rainbowVector.Z, 255);
+
+globalvar Vector rainbowVector = Vector(0,0,0);
+Number rainbowRate: 900;
+rule: "[wheelVisuals.del] Start chasing rainbowVector"
+if (DEBUG_MODE)
+{
+  ChaseVariableAtRate(
+    rainbowVector,
+    Vector(
+      rainbow_R(TotalTimeElapsed() * rainbowRate),
+      rainbow_G(TotalTimeElapsed() * rainbowRate),
+      rainbow_B(TotalTimeElapsed() * rainbowRate)),
+    99999,
+    RateChaseReevaluation.DestinationAndRate);
+}
+
+rule: "Global credit HUD"
+{
+  CreateHudText(
+    AllPlayers(),
+    Subheader: "Mystery Ultimates by CactusPuppy | Code: 12MET",
+    Location: Location.Top,
+    SortOrder: -10,
+    SubheaderColor: Color.White,
+    Reevaluation: HudTextRev.VisibleToAndColor
+  );
+  if (DEBUG_MODE) {
+    CreateHudText(
+      AllPlayers(),
+      Subheader: "DEBUG MODE ENABLED",
+      Location: Location.Top,
+      SortOrder: -9,
+      SubheaderColor: rainbow,
+      Reevaluation: HudTextRev.VisibleToAndColor
+    );
+  }
+}
+
+rule: "Prevent player from actually using their ultimate initially"
+Event.OngoingPlayer
+{
+  DisallowButton(EventPlayer(), Button.Ultimate);
+}
+
+rule: "Track player's true hero"
+Event.OngoingPlayer
+if (HasSpawned())
+if (ultimateState == UltimateState.NORMAL)
+if (trueHero != HeroOf())
+{
+  trueHero = HeroOf();
+}
+
+disabled rule: "When player is trying to use ult, use a random ultimate"
+Event.OngoingPlayer
+if (UltimateChargePercent() == 100)
+if ([HasStatus(EventPlayer(), Status.Asleep), HasStatus(EventPlayer(), Status.Frozen), HasStatus(EventPlayer(), Status.KnockedDown), HasStatus(EventPlayer(), Status.Stunned)].IsTrueForAny((status) => status) == false)
+if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+{
+  ultimateState = UltimateState.PREPARING_ULT;
+  DisallowButton(EventPlayer(), Button.Ability1);
+  DisallowButton(EventPlayer(), Button.Ability2);
+
+  if (DEBUG_MODE) {
+    ForcePlayerHero(EventPlayer(), DEBUG_ULTIMATE_HERO);
+  } else {
+    ForcePlayerHero(EventPlayer(), RandomValueInArray(AllHeroes()));
+  }
+  WaitUntil(trueHero != HeroOf(EventPlayer()), 0.25);
+  PrepareUlt();
+
+  SetUltimateCharge(EventPlayer(), 100);
+  AllowButton(EventPlayer(), Button.Ultimate);
+  MinWait();
+
+  if (placeableUltimateHeroes.Contains(HeroOf())) {
+    PressButton(EventPlayer(), Button.Ultimate);
+    WaitUntil(IsUsingUltimate(), 1000000);
+  } else {
+    while (!(IsUsingUltimate(EventPlayer()) || IsDuplicating(EventPlayer()))) {
+      if (IsDead()) break;
+      SetUltimateCharge(EventPlayer(), 100);
+      PressButton(EventPlayer(), Button.Ultimate);
+      Wait(0.1);
+    }
+  }
+
+  ultimateState = UltimateState.USING_ULT;
+  DisallowButton(EventPlayer(), Button.Ultimate);
+  AllowButton(EventPlayer(), Button.Ability1);
+  AllowButton(EventPlayer(), Button.Ability2);
+  WaitUntil(!(IsUsingUltimate() || IsDuplicating(EventPlayer())), 1000000);
+  SetLingerDuration();
+
+  ForcePlayerHero(EventPlayer(), trueHero);
+  WaitUntil(trueHero == HeroOf(EventPlayer()), 1000000);
+
+  SetUltimateCharge(EventPlayer(), 0);
+  StopForcingHero(EventPlayer());
+  ultimateState = UltimateState.NORMAL;
+}
+
+void PrepareUlt() playervar "[SUB]: Special cases pre-ultimate-press"
+{
+  switch (HeroOf()) {
+    case Hero.Dva:
+      # Allow bomb launching
+      AllowButton(EventPlayer(), Button.Ability1);
+      # Grant some extra time to realize they can launch bomb
+      Wait(1);
+      break;
+  }
+}
+
+playervar Number extendedUltPercentLeft;
+playervar Number extendedUltDuration;
+playervar Any extendedUltTimer;
+
+Number flashStart: 33;
+Number flashEnd: 50;
+Number flashMinOpacity: 32;
+Number flashWeight(Player p = EventPlayer()): Min(1, Max(0, (p.extendedUltPercentLeft - flashStart) / (flashEnd - flashStart)));
+Number flashFactor(Player p = EventPlayer()): SineFromRadians(SquareRoot(18 * p.extendedUltDuration * p.extendedUltPercentLeft)) / 2 + 0.5;
+
+Boolean IsAbilitiesLocked(Player p = EventPlayer()): [IsHackAbilityLockoutActive(p), HasStatus(p, Status.Asleep), HasStatus(p, Status.Frozen), HasStatus(p, Status.KnockedDown), HasStatus(p, Status.Stunned)].IsTrueForAny((status) => status);
+
+void SetLingerDuration() playervar "[SUB]: Set linger duration"
+{
+  extendedUltDuration = 0;
+  switch (HeroOf()) {
+    case Hero.JunkerQueen:
+      extendedUltDuration = 5;
+      break;
+    case Hero.WreckingBall:
+      extendedUltDuration = 15;
+      break;
+    case Hero.Lifeweaver:
+      extendedUltDuration = 15;
+      break;
+    case Hero.Tracer:
+      extendedUltDuration = 3;
+      break;
+    case Hero.Illari:
+      extendedUltDuration = 5;
+      break;
+    case Hero.Torbjorn:
+      extendedUltDuration = 10;
+      break;
+    case Hero.Hanzo:
+      extendedUltDuration = 10;
+      break;
+  }
+}
+
+rule: "When player melees, give them 25% ult charge"
+Event.OngoingPlayer
+if (DEBUG_MODE)
+if (IsButtonHeld(EventPlayer(), Button.Melee))
+{
+  SetUltimateCharge(EventPlayer(), Min(100, UltimateChargePercent(EventPlayer()) + 25));
+}
+
+globalvar Boolean IsInSlowMotion;
+
+rule: "When player hits reload, toggle slow motion"
+Event.OngoingPlayer
+if (DEBUG_MODE)
+if (IsButtonHeld(EventPlayer(), Button.Reload))
+{
+  if (IsInSlowMotion) {
+    SetSlowMotion(100);
+  } else {
+    SetSlowMotion(33);
+  }
+  IsInSlowMotion = !IsInSlowMotion;
+}

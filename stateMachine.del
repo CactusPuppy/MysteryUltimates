@@ -1,0 +1,385 @@
+import "main.ostw";
+
+enum UltimateState {
+  NORMAL = "NORMAL",
+  PREPARING_ULT = "PREPARING_ULT",
+  USING_ULT = "USING_ULT",
+  LINGERING = "LINGERING",
+  DEAD = "DEAD"
+}
+
+enum PreparingUltState {
+  NONE = "NONE",
+  SWITCHING_HEROES = "SWITCHING_HEROES",
+  ACTIVATING_ULT = "ACTIVATING_ULT",
+  CASTING_ULT = "CASTING_ULT"
+}
+
+enum UltimateEvent {
+  NONE = "NONE",
+  ULT_ACTIVATION = "ULT_ACTIVATION",
+  USED_ULTIMATE = "USED_ULTIMATE",
+  ULTIMATE_ENDED = "ULTIMATE_ENDED",
+  LINGER_EXPIRED = "LINGER_EXPIRED",
+  DIED = "DIED"
+}
+
+enum PreparingUltEvent {
+  NONE = "NONE",
+  STATE_ENTER = "STATE_ENTER",
+  HERO_SWAPPED = "HERO_SWAPPED",
+  PRESSED_ULTIMATE = "PRESSED_ULTIMATE",
+  PRESSED_ULTIMATE_EXPIRED = "PRESSED_ULTIMATE_EXPIRED",
+  USED_ULTIMATE = "USED_ULTIMATE",
+  STATE_EXIT = "STATE_EXIT"
+}
+
+playervar UltimateState ultimateState = UltimateState.NORMAL;
+playervar PreparingUltState preparingUltState = PreparingUltState.NONE;
+playervar PreparingUltEvent preparingUltEvent = PreparingUltEvent.NONE;
+playervar UltimateEvent ultimateEvent = UltimateEvent.NONE;
+
+void DispatchUltimateEvent(in UltimateEvent event) {
+  ultimateEvent = event;
+  UltimateEventHandler();
+  ultimateEvent = UltimateEvent.NONE;
+}
+
+void DispatchPreparingUltEvent(in PreparingUltEvent event) {
+  preparingUltEvent = event;
+  PreparingUltimateEventHandler();
+  preparingUltEvent = PreparingUltEvent.NONE;
+}
+
+/* === General Ultimate Event Handling === */
+
+recursive void UltimateEventHandler() playervar "[stateMachine.del] Dispatch event to handler based on ultimateState"
+{
+  switch (ultimateState) {
+    case UltimateState.NORMAL:
+      UltEventHandler_Normal();
+      break;
+    case UltimateState.PREPARING_ULT:
+      UltEventHandler_Preparing();
+      break;
+    case UltimateState.USING_ULT:
+      UltEventHandler_Using();
+      break;
+    case UltimateState.LINGERING:
+      UltEventHandler_Lingering();
+      break;
+  }
+}
+
+playervar Hero[] eligibleHeroSwaps;
+
+void UltEventHandler_Normal() playervar "[stateMachine.del] Handle event for NORMAL state"
+{
+  switch (ultimateEvent) {
+    case UltimateEvent.ULT_ACTIVATION:
+      DisallowButton(EventPlayer(), Button.Ability1);
+      DisallowButton(EventPlayer(), Button.Ability2);
+
+      if (DEBUG_MODE && DEBUG_SHOULD_FORCE_ULTIMATE_HERO) {
+        ForcePlayerHero(EventPlayer(), DEBUG_ULTIMATE_HERO);
+      } else {
+        eligibleHeroSwaps = AllHeroes();
+
+        if (RANDOM_ULTIMATE_MATCHES_ROLE) {
+          if (AllTankHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllTankHeroes();
+          else if (AllDamageHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllDamageHeroes();
+          else if (AllSupportHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllSupportHeroes();
+        }
+
+        if (FORCE_NON_NATIVE_ULTIMATE) eligibleHeroSwaps.ModRemoveByValue(HeroOf());
+        ForcePlayerHero(EventPlayer(), RandomValueInArray(eligibleHeroSwaps));
+      }
+
+      if (ability1AllowedHeroes.Contains(HeroOf())) {
+        AllowButton(EventPlayer(), Button.Ability1);
+      }
+      if (ability2AllowedHeroes.Contains(HeroOf())) {
+        AllowButton(EventPlayer(), Button.Ability2);
+      }
+
+      AllowButton(EventPlayer(), Button.Ultimate);
+
+      ultimateState = UltimateState.PREPARING_ULT;
+      break;
+  }
+}
+
+void UltEventHandler_Preparing() playervar "[stateMachine.del] Handle event for PREPARING_ULT state"
+{
+  switch (ultimateEvent) {
+    case UltimateEvent.USED_ULTIMATE:
+      AllowButton(EventPlayer(), Button.Ability1);
+      AllowButton(EventPlayer(), Button.Ability2);
+      DisallowButton(EventPlayer(), Button.Ultimate);
+      ultimateState = UltimateState.USING_ULT;
+      break;
+
+    case UltimateEvent.DIED:
+      ultimateState = UltimateState.DEAD;
+      async! RestoreTrueHeroAndReturnToNormal();
+      break;
+  }
+}
+
+void UltEventHandler_Using() playervar "[stateMachine.del] Handle event for USING_ULT state"
+{
+  switch (ultimateEvent) {
+    case UltimateEvent.ULTIMATE_ENDED:
+      SetLingerDuration();
+      if (extendedUltDuration > 0) {
+        ultimateState = UltimateState.LINGERING;
+        break;
+      }
+      async! RestoreTrueHeroAndReturnToNormal();
+      break;
+
+    case UltimateEvent.DIED:
+      ultimateState = UltimateState.DEAD;
+      async! RestoreTrueHeroAndReturnToNormal();
+      break;
+  }
+}
+
+void UltEventHandler_Lingering() playervar "[stateMachine.del] Handle event for LINGERING state"
+{
+  switch (ultimateEvent) {
+    case UltimateEvent.LINGER_EXPIRED:
+    case UltimateEvent.DIED:
+      DisallowButton(EventPlayer(), Button.Ultimate);
+      async! RestoreTrueHeroAndReturnToNormal();
+      break;
+  }
+}
+
+/* === PREPARING_ULT Event Handling === */
+
+void PreparingUltimateEventHandler() playervar "[stateMachine.del] Handle preparing ult event"
+{
+  switch (preparingUltState) {
+    case PreparingUltState.NONE:
+      PreparingUltEventHandler_None();
+      break;
+    case PreparingUltState.SWITCHING_HEROES:
+      PreparingUltEventHandler_SwitchingHeroes();
+      break;
+    case PreparingUltState.ACTIVATING_ULT:
+      PreparingUltEventHandler_ActivatingUlt();
+      break;
+    case PreparingUltState.CASTING_ULT:
+      PreparingUltEventHandler_CastingUlt();
+      break;
+  }
+}
+
+void PreparingUltEventHandler_None() playervar "[stateMachine.del] Handle event for NONE state"
+{
+  switch (preparingUltEvent) {
+    case PreparingUltEvent.STATE_ENTER:
+      preparingUltState = PreparingUltState.SWITCHING_HEROES;
+      break;
+  }
+}
+
+void PreparingUltEventHandler_SwitchingHeroes() playervar "[stateMachine.del] Handle event for SWITCHING_HEROES state"
+{
+  switch (preparingUltEvent) {
+    case PreparingUltEvent.HERO_SWAPPED:
+      preparingUltState = PreparingUltState.ACTIVATING_ULT;
+      break;
+
+    case PreparingUltEvent.USED_ULTIMATE:
+      DispatchUltimateEvent(UltimateEvent.USED_ULTIMATE);
+    case PreparingUltEvent.STATE_EXIT:
+      preparingUltState = PreparingUltState.NONE;
+      break;
+  }
+}
+
+void PreparingUltEventHandler_ActivatingUlt() playervar "[stateMachine.del] Handle event for ACTIVATING_ULT state"
+{
+  switch (preparingUltEvent) {
+    case PreparingUltEvent.PRESSED_ULTIMATE:
+      preparingUltState = PreparingUltState.CASTING_ULT;
+      break;
+
+    case PreparingUltEvent.USED_ULTIMATE:
+      DispatchUltimateEvent(UltimateEvent.USED_ULTIMATE);
+    case PreparingUltEvent.STATE_EXIT:
+      preparingUltState = PreparingUltState.NONE;
+      break;
+  }
+}
+
+void PreparingUltEventHandler_CastingUlt() playervar "[stateMachine.del] Handle event for CASTING_ULT state"
+{
+  switch (preparingUltEvent) {
+    case PreparingUltEvent.PRESSED_ULTIMATE_EXPIRED:
+      preparingUltState = PreparingUltState.ACTIVATING_ULT;
+      break;
+
+    case PreparingUltEvent.USED_ULTIMATE:
+      DispatchUltimateEvent(UltimateEvent.USED_ULTIMATE);
+    case PreparingUltEvent.STATE_EXIT:
+      preparingUltState = PreparingUltState.NONE;
+      break;
+  }
+}
+
+void RestoreTrueHeroAndReturnToNormal() playervar "[stateMachine.del] Restore the player's true hero and return to NORMAL state"
+{
+  AllowButton(EventPlayer(), Button.Ability1);
+  AllowButton(EventPlayer(), Button.Ability2);
+  DisallowButton(EventPlayer(), Button.Ultimate);
+  WaitUntil(IsAlive(), 1000000);
+  ForcePlayerHero(EventPlayer(), trueHero);
+  WaitUntil(HeroOf() == trueHero, 1000000);
+  SetUltimateCharge(EventPlayer(), 0);
+  async! OverwriteHeroSwapUltTransfer();
+  StopForcingHero(EventPlayer());
+  ultimateState = UltimateState.NORMAL;
+}
+
+void OverwriteHeroSwapUltTransfer() playervar "[stateMachine.del] Prevent granting ult from hero transfer"
+{
+  WaitUntil(UltimateChargePercent() > 0 || IsDead(), 1);
+  AbortIf(IsDead());
+  SetUltimateCharge(EventPlayer(), 0);
+}
+
+/* === Event Triggers === */
+
+rule: "When the player presses their ult button in NORMAL mode, activate ult"
+Event.OngoingPlayer
+if (IsAlive())
+if (ultimateState == UltimateState.NORMAL)
+if (UltimateChargePercent() == 100)
+if (IsAbilitiesLocked() == false)
+if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+{
+  DispatchPreparingUltEvent(PreparingUltEvent.STATE_ENTER);
+  DispatchUltimateEvent(UltimateEvent.ULT_ACTIVATION);
+}
+
+rule: "When the player is in the preparing ult state and they swap off their true hero, issue a hero swap event"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.PREPARING_ULT)
+if (preparingUltState == PreparingUltState.SWITCHING_HEROES)
+if (HeroOf() != trueHero)
+{
+  if (HeroOf() == Hero.Dva) Wait(1);
+  DispatchPreparingUltEvent(PreparingUltEvent.HERO_SWAPPED);
+}
+
+rule: "If player is placing ult doesn't have enough ult charge while casting, fill it up"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.PREPARING_ULT)
+if (preparingUltState == PreparingUltState.ACTIVATING_ULT)
+if (UltimateChargePercent() < 100)
+{
+  SetUltimateCharge(EventPlayer(), 100);
+  Wait(0.05, WaitBehavior.AbortWhenFalse);
+  LoopIfConditionIsTrue();
+}
+
+rule: "Continually attempt to use ult while in the preparing ult state and the player is in the activating ult state"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.PREPARING_ULT)
+if (placeableUltimateHeroes.Contains(HeroOf()) == false)
+{
+  PressButton(EventPlayer(), Button.Ultimate);
+  Wait(0.05, WaitBehavior.AbortWhenFalse);
+  LoopIfConditionIsTrue();
+}
+
+rule: "When the player presses their ult button in the activating state, issue an ult_pressed event, then after a while, if we haven't exited the state, issue an ult_pressed_expired event"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.PREPARING_ULT)
+if (preparingUltState == PreparingUltState.ACTIVATING_ULT)
+if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+if (UltimateChargePercent() == 100)
+{
+  DispatchPreparingUltEvent(PreparingUltEvent.PRESSED_ULTIMATE);
+  WaitUntil(ultimateState != UltimateState.PREPARING_ULT, 1);
+  if (ultimateState == UltimateState.PREPARING_ULT)
+  {
+    DispatchPreparingUltEvent(PreparingUltEvent.PRESSED_ULTIMATE_EXPIRED);
+  }
+}
+
+rule: "In the using ult state, if the player gains ult charge, set it back to 0"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.USING_ULT || ultimateState == UltimateState.LINGERING)
+if (UltimateChargePercent() > 0)
+{
+  SetUltimateCharge(EventPlayer(), 0);
+  MinWait();
+  LoopIfConditionIsTrue();
+}
+
+rule: "While attempting to cast ult, if player has an placeable ult and they cancel it, bring it back up"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.PREPARING_ULT)
+if (placeableUltimateHeroes.Contains(HeroOf()))
+if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
+{
+  Wait(0.25);
+  PressButton(EventPlayer(), Button.Ultimate);
+}
+
+rule: "While attempting to cast ult, if player has a placeable ult and they get hard CC'd, bring it back up when they are no longer afflicted"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.PREPARING_ULT)
+if (placeableUltimateHeroes.Contains(HeroOf()))
+if (IsAbilitiesLocked())
+{
+  WaitUntil(IsAbilitiesLocked() == false, 1000000);
+  PressButton(EventPlayer(), Button.Ultimate);
+}
+
+rule: "When the player dies, issue the appropriate events"
+Event.OnDeath
+{
+  DispatchUltimateEvent(UltimateEvent.DIED);
+  DispatchPreparingUltEvent(PreparingUltEvent.STATE_EXIT);
+}
+
+rule: "When the player starts using ult, issue a USED_ULTIMATE event, then when they stop using it, issue a ULTIMATE_ENDED event"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.PREPARING_ULT)
+if (IsUsingUltimate(EventPlayer()) || IsDuplicating(EventPlayer()))
+{
+  DispatchPreparingUltEvent(PreparingUltEvent.USED_ULTIMATE);
+  WaitUntil(!IsUsingUltimate(EventPlayer()) && !IsDuplicating(EventPlayer()), 1000000);
+  # Have to wait a bit for Kiriko because casting ult can cause IsUsingUltimate to go false for a short period of time
+  if (HeroOf() == Hero.Kiriko) {
+    WaitUntil(IsUsingUltimate(EventPlayer()) || IsDuplicating(EventPlayer()), 0.5);
+    LoopIf(IsUsingUltimate(EventPlayer()) || IsDuplicating(EventPlayer()));
+  }
+  DispatchUltimateEvent(UltimateEvent.ULTIMATE_ENDED);
+}
+
+rule: "When the lingering state begins, start a timer"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.LINGERING)
+{
+  extendedUltPercentLeft = 100;
+  ChaseVariableOverTime(extendedUltPercentLeft, 0, extendedUltDuration, TimeChaseReevaluation.None);
+  extendedUltTimer = CreateProgressBarHudText(EventPlayer(), extendedUltPercentLeft, "Ultimate Hero Time Remaining", Location.Left, -10,
+    CustomColor(0,234,234,(flashWeight() + (1 - flashWeight()) * flashFactor()) * (255 - flashMinOpacity) + flashMinOpacity));
+  BigMessage(EventPlayer(), <"Returning to original hero in <1> seconds...", IconString(Icon.Warning), extendedUltDuration>);
+
+  WaitUntil(extendedUltPercentLeft == 0 || ultimateState != UltimateState.LINGERING, 1000000);
+
+  if (extendedUltPercentLeft > 0) {
+    extendedUltPercentLeft = 0;
+    StopChasingVariable(extendedUltPercentLeft);
+  } else {
+    DispatchUltimateEvent(UltimateEvent.LINGER_EXPIRED);
+  }
+  DestroyProgressBarHudText(extendedUltTimer);
+}

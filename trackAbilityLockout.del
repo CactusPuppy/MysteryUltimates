@@ -1,0 +1,36 @@
+Number ABILITY_LOCKOUT_DURATION: 1.5;
+
+playervar Number hackAbilityLockout = 0;
+Boolean IsHaakAbilityLockoutActive(Player p = EventPlayer()): p.hackAbilityLockout > 0;
+
+rule: "[trackAbilityLockout.del] When a player becomes hacked, start ability lockout timer"
+Event.OngoingPlayer
+if (HasStatus(EventPlayer(), Status.Hacked))
+{
+  StopChasingVariable(hackAbilityLockout);
+  EventPlayer().hackAbilityLockout = ABILITY_LOCKOUT_DURATION;
+  ChaseVariableAtRate(hackAbilityLockout, 0, 1, RateChaseReevaluation.None);
+
+  # Handle cleansing
+  WaitUntil(!HasStatus(EventPlayer(), Status.Hacked) || EventPlayer().hackAbilityLockout <= 0, 1000000);
+
+  hackAbilityLockout = 0;
+  StopChasingVariable(hackAbilityLockout);
+}
+
+rule: "[trackAbilityLockout.del] When a player is hit by EMP, start ability lockout timer"
+Event.OnDamageTaken
+if (HeroOf(Attacker()) == Hero.Sombra)
+if (EventAbility() == Button.Ultimate)
+{
+  StopChasingVariable(hackAbilityLockout);
+  EventPlayer().hackAbilityLockout = ABILITY_LOCKOUT_DURATION;
+  ChaseVariableAtRate(hackAbilityLockout, 0, 1, RateChaseReevaluation.None);
+}
+
+rule: "[trackAbilityLockout.del] When hackAbilityLockout reaches 0, stop chasing it"
+Event.OngoingPlayer
+if (EventPlayer().hackAbilityLockout <= 0)
+{
+  StopChasingVariable(hackAbilityLockout);
+}
