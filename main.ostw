@@ -62,14 +62,6 @@ if (DEBUG_MODE)
 
 rule: "Global credit HUD"
 {
-  // CreateHudText(
-  //   AllPlayers(),
-  //   Subheader: "Mystery Ultimates by CactusPuppy | Code: 12MET",
-  //   Location: Location.Top,
-  //   SortOrder: -10,
-  //   SubheaderColor: Color.White,
-  //   Reevaluation: HudTextRev.VisibleToAndColor
-  // );
   CreateHudText(
     AllPlayers(),
     Header: " Code: 12MET ",
