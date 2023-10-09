@@ -37,6 +37,14 @@ Color rainbow: CustomColor(rainbowVector.X, rainbowVector.Y, rainbowVector.Z, 25
 
 globalvar Vector rainbowVector = Vector(0,0,0);
 Number rainbowRate: 900;
+
+rule: "If not in DEBUG_MODE, disable inspector recording"
+{
+  if (!DEBUG_MODE) {
+    DisableInspectorRecording();
+  }
+}
+
 rule: "[wheelVisuals.del] Start chasing rainbowVector"
 if (DEBUG_MODE)
 {
