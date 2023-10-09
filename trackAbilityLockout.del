@@ -1,7 +1,7 @@
 Number ABILITY_LOCKOUT_DURATION: 1.5;
 
 playervar Number hackAbilityLockout = 0;
-Boolean IsHaakAbilityLockoutActive(Player p = EventPlayer()): p.hackAbilityLockout > 0;
+Boolean IsHackAbilityLockoutActive(Player p = EventPlayer()): p.hackAbilityLockout > 0;
 
 rule: "[trackAbilityLockout.del] When a player becomes hacked, start ability lockout timer"
 Event.OngoingPlayer
