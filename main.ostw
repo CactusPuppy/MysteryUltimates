@@ -60,19 +60,32 @@ if (DEBUG_MODE)
 
 rule: "Global credit HUD"
 {
+  // CreateHudText(
+  //   AllPlayers(),
+  //   Subheader: "Mystery Ultimates by CactusPuppy | Code: 12MET",
+  //   Location: Location.Top,
+  //   SortOrder: -10,
+  //   SubheaderColor: Color.White,
+  //   Reevaluation: HudTextRev.VisibleToAndColor
+  // );
   CreateHudText(
     AllPlayers(),
-    Subheader: "Mystery Ultimates by CactusPuppy | Code: 12MET",
-    Location: Location.Top,
+    Header: "Code: 12MET",
+    Subheader: "            By CactusPuppy",
+    Text: <"<0> Mystery Ultimates", IconString(Icon.QuestionMark)>,
+    Location: Location.Right,
     SortOrder: -10,
-    SubheaderColor: Color.White,
-    Reevaluation: HudTextRev.VisibleToAndColor
+    HeaderColor: Color.Orange,
+    SubheaderColor: Color.Gray,
+    TextColor: Color.White,
+    Reevaluation: HudTextRev.VisibleTo,
+    Spectators: Spectators.VisibleAlways
   );
   if (DEBUG_MODE) {
     CreateHudText(
       AllPlayers(),
       Subheader: "DEBUG MODE ENABLED",
-      Location: Location.Top,
+      Location: Location.Right,
       SortOrder: -9,
       SubheaderColor: rainbow,
       Reevaluation: HudTextRev.VisibleToAndColor
