@@ -159,6 +159,9 @@ void SetLingerDuration() playervar "[SUB]: Set linger duration"
     case Hero.Hanzo:
       extendedUltDuration = 10;
       break;
+    case Hero.Bastion:
+      extendedUltDuration = 1;
+      break;
   }
 }
 
