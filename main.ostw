@@ -17,6 +17,7 @@ globalvar Boolean RANDOM_ULTIMATE_MATCHES_ROLE = WorkshopSettingToggle("Settings
 globalvar Boolean DEBUG_MODE = WorkshopSettingToggle("°DEBUG", "Debug Mode Enabled", false, 0);
 globalvar Boolean DEBUG_SHOULD_FORCE_ULTIMATE_HERO = WorkshopSettingToggle("°DEBUG", "Force Ultimate Hero", false, 1);
 globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero("°DEBUG", "Ultimate Hero to Force", Hero.Baptiste, 2);
+globalvar Boolean DEBUG_SHOW_ULTIMATE_HERO = WorkshopSettingToggle("°DEBUG", "Show Randomized Ultimate Hero", false, 3);
 
 globalvar Hero[] placeableUltimateHeroes = [Hero.Baptiste, Hero.Symmetra, Hero.Lifeweaver];
 globalvar Hero[] ability1AllowedHeroes = [Hero.Dva];
@@ -232,4 +233,24 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
   StartFacing(EventPlayer(), facing, 1000, Relative.ToWorld, FacingRev.None);
   WaitUntil(AngleBetweenVectors(FacingDirectionOf(EventPlayer()), facing) < 0.1, 1000000);
   StopFacing(EventPlayer());
+}
+
+rule: "Create randomized ultimate hero HUD"
+Event.OngoingPlayer
+if (DEBUG_MODE)
+if (DEBUG_SHOW_ULTIMATE_HERO)
+{
+  CreateHudText(
+    ultimateHero && ultimateState == UltimateState.NORMAL ? EventPlayer() : null,
+    Header: <"<0>: <1>", HeroIconString(ultimateHero), AbilityIconString(ultimateHero, Button.Ultimate)>,
+    Subheader: "Upcoming Ultimate Hero",
+    Text: ultimateHero,
+    Location: Location.Left,
+    SortOrder: -10,
+    HeaderColor: Color.Blue,
+    SubheaderColor: Color.White,
+    TextColor: Color.White,
+    Reevaluation: HudTextRev.VisibleToAndString,
+    Spectators: Spectators.VisibleNever
+  );
 }
