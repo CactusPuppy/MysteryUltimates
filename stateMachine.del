@@ -11,6 +11,7 @@ enum UltimateState {
 enum PreparingUltState {
   NONE = "NONE",
   SWITCHING_HEROES = "SWITCHING_HEROES",
+  STALLING = "STALLING",
   ACTIVATING_ULT = "ACTIVATING_ULT",
   CASTING_ULT = "CASTING_ULT"
 }
@@ -28,6 +29,7 @@ enum PreparingUltEvent {
   NONE = "NONE",
   STATE_ENTER = "STATE_ENTER",
   HERO_SWAPPED = "HERO_SWAPPED",
+  STALL_EXPIRED = "STALL_EXPIRED",
   PRESSED_ULTIMATE = "PRESSED_ULTIMATE",
   PRESSED_ULTIMATE_EXPIRED = "PRESSED_ULTIMATE_EXPIRED",
   USED_ULTIMATE = "USED_ULTIMATE",
@@ -167,6 +169,9 @@ void PreparingUltimateEventHandler() playervar "[stateMachine.del] Handle prepar
     case PreparingUltState.SWITCHING_HEROES:
       PreparingUltEventHandler_SwitchingHeroes();
       break;
+    case PreparingUltState.STALLING:
+      PreparingUltEventHandler_Stalling();
+      break;
     case PreparingUltState.ACTIVATING_ULT:
       PreparingUltEventHandler_ActivatingUlt();
       break;
@@ -189,6 +194,26 @@ void PreparingUltEventHandler_SwitchingHeroes() playervar "[stateMachine.del] Ha
 {
   switch (preparingUltEvent) {
     case PreparingUltEvent.HERO_SWAPPED:
+      SetStallDuration();
+      if (ultCastStallDuration > 0) {
+        preparingUltState = PreparingUltState.STALLING;
+        break;
+      }
+      preparingUltState = PreparingUltState.ACTIVATING_ULT;
+      break;
+
+    case PreparingUltEvent.USED_ULTIMATE:
+      DispatchUltimateEvent(UltimateEvent.USED_ULTIMATE);
+    case PreparingUltEvent.STATE_EXIT:
+      preparingUltState = PreparingUltState.NONE;
+      break;
+  }
+}
+
+void PreparingUltEventHandler_Stalling() playervar "[stateMachine.del] Handle event for STALLING state"
+{
+  switch (preparingUltEvent) {
+    case PreparingUltEvent.STALL_EXPIRED:
       preparingUltState = PreparingUltState.ACTIVATING_ULT;
       break;
 
@@ -271,14 +296,22 @@ if (ultimateState == UltimateState.PREPARING_ULT)
 if (preparingUltState == PreparingUltState.SWITCHING_HEROES)
 if (HeroOf() != trueHero)
 {
-  if (HeroOf() == Hero.Dva) Wait(1);
   DispatchPreparingUltEvent(PreparingUltEvent.HERO_SWAPPED);
+}
+
+rule: "When player is stalling ult cast, wait for the duration then issue a stall expired event"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.PREPARING_ULT)
+if (preparingUltState == PreparingUltState.STALLING)
+{
+  Wait(ultCastStallDuration, WaitBehavior.AbortWhenFalse);
+  DispatchPreparingUltEvent(PreparingUltEvent.STALL_EXPIRED);
 }
 
 rule: "If player is placing ult doesn't have enough ult charge while casting, fill it up"
 Event.OngoingPlayer
 if (ultimateState == UltimateState.PREPARING_ULT)
-if (preparingUltState == PreparingUltState.ACTIVATING_ULT)
+if (preparingUltState == PreparingUltState.ACTIVATING_ULT || preparingUltState == PreparingUltState.STALLING)
 if (UltimateChargePercent() < 100)
 {
   SetUltimateCharge(EventPlayer(), 100);
@@ -289,6 +322,7 @@ if (UltimateChargePercent() < 100)
 rule: "Continually attempt to use ult while in the preparing ult state and the player is in the activating ult state"
 Event.OngoingPlayer
 if (ultimateState == UltimateState.PREPARING_ULT)
+if (preparingUltState != PreparingUltState.STALLING)
 if (placeableUltimateHeroes.Contains(HeroOf()) == false)
 {
   PressButton(EventPlayer(), Button.Ultimate);

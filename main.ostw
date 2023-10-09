@@ -109,6 +109,7 @@ if (trueHero != HeroOf())
 }
 
 playervar Number extendedUltPercentLeft;
+playervar Number ultCastStallDuration;
 playervar Number extendedUltDuration;
 playervar Any extendedUltTimer;
 
@@ -119,6 +120,19 @@ Number flashWeight(Player p = EventPlayer()): Min(1, Max(0, (p.extendedUltPercen
 Number flashFactor(Player p = EventPlayer()): SineFromRadians(SquareRoot(18 * p.extendedUltDuration * p.extendedUltPercentLeft)) / 2 + 0.5;
 
 Boolean IsAbilitiesLocked(Player p = EventPlayer()): [IsHackAbilityLockoutActive(p), HasStatus(p, Status.Asleep), HasStatus(p, Status.Frozen), HasStatus(p, Status.KnockedDown), HasStatus(p, Status.Stunned)].IsTrueForAny((status) => status);
+
+void SetStallDuration() playervar "[SUB]: Set cast stall duration"
+{
+  ultCastStallDuration = 0;
+  switch (HeroOf()) {
+    case Hero.Dva:
+      ultCastStallDuration = 1.25;
+      break;
+    case Hero.Zarya:
+      ultCastStallDuration = 0.75;
+      break;
+  }
+}
 
 void SetLingerDuration() playervar "[SUB]: Set linger duration"
 {
