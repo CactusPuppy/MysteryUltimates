@@ -108,67 +108,6 @@ if (trueHero != HeroOf())
   trueHero = HeroOf();
 }
 
-disabled rule: "When player is trying to use ult, use a random ultimate"
-Event.OngoingPlayer
-if (UltimateChargePercent() == 100)
-if ([HasStatus(EventPlayer(), Status.Asleep), HasStatus(EventPlayer(), Status.Frozen), HasStatus(EventPlayer(), Status.KnockedDown), HasStatus(EventPlayer(), Status.Stunned)].IsTrueForAny((status) => status) == false)
-if (IsButtonHeld(EventPlayer(), Button.Ultimate))
-{
-  ultimateState = UltimateState.PREPARING_ULT;
-  DisallowButton(EventPlayer(), Button.Ability1);
-  DisallowButton(EventPlayer(), Button.Ability2);
-
-  if (DEBUG_MODE) {
-    ForcePlayerHero(EventPlayer(), DEBUG_ULTIMATE_HERO);
-  } else {
-    ForcePlayerHero(EventPlayer(), RandomValueInArray(AllHeroes()));
-  }
-  WaitUntil(trueHero != HeroOf(EventPlayer()), 0.25);
-  PrepareUlt();
-
-  SetUltimateCharge(EventPlayer(), 100);
-  AllowButton(EventPlayer(), Button.Ultimate);
-  MinWait();
-
-  if (placeableUltimateHeroes.Contains(HeroOf())) {
-    PressButton(EventPlayer(), Button.Ultimate);
-    WaitUntil(IsUsingUltimate(), 1000000);
-  } else {
-    while (!(IsUsingUltimate(EventPlayer()) || IsDuplicating(EventPlayer()))) {
-      if (IsDead()) break;
-      SetUltimateCharge(EventPlayer(), 100);
-      PressButton(EventPlayer(), Button.Ultimate);
-      Wait(0.1);
-    }
-  }
-
-  ultimateState = UltimateState.USING_ULT;
-  DisallowButton(EventPlayer(), Button.Ultimate);
-  AllowButton(EventPlayer(), Button.Ability1);
-  AllowButton(EventPlayer(), Button.Ability2);
-  WaitUntil(!(IsUsingUltimate() || IsDuplicating(EventPlayer())), 1000000);
-  SetLingerDuration();
-
-  ForcePlayerHero(EventPlayer(), trueHero);
-  WaitUntil(trueHero == HeroOf(EventPlayer()), 1000000);
-
-  SetUltimateCharge(EventPlayer(), 0);
-  StopForcingHero(EventPlayer());
-  ultimateState = UltimateState.NORMAL;
-}
-
-void PrepareUlt() playervar "[SUB]: Special cases pre-ultimate-press"
-{
-  switch (HeroOf()) {
-    case Hero.Dva:
-      # Allow bomb launching
-      AllowButton(EventPlayer(), Button.Ability1);
-      # Grant some extra time to realize they can launch bomb
-      Wait(1);
-      break;
-  }
-}
-
 playervar Number extendedUltPercentLeft;
 playervar Number extendedUltDuration;
 playervar Any extendedUltTimer;
