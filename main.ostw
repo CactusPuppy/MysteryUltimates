@@ -70,14 +70,14 @@ rule: "Global credit HUD"
   // );
   CreateHudText(
     AllPlayers(),
-    Header: "Code: 12MET",
-    Subheader: "            By CactusPuppy",
-    Text: <"<0> Mystery Ultimates", IconString(Icon.QuestionMark)>,
+    Header: " Code: 12MET ",
+    Subheader: <"<0> Mystery Ultimates", IconString(Icon.QuestionMark)>,
+    Text: "By CactusPuppy",
     Location: Location.Right,
     SortOrder: -10,
     HeaderColor: Color.Orange,
-    SubheaderColor: Color.Gray,
-    TextColor: Color.White,
+    SubheaderColor: Color.White,
+    TextColor: CustomColor(255, 255, 255, 128),
     Reevaluation: HudTextRev.VisibleTo,
     Spectators: Spectators.VisibleAlways
   );
