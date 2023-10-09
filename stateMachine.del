@@ -55,7 +55,7 @@ void DispatchPreparingUltEvent(in PreparingUltEvent event) {
 
 /* === General Ultimate Event Handling === */
 
-recursive void UltimateEventHandler() playervar "[stateMachine.del] Dispatch event to handler based on ultimateState"
+void UltimateEventHandler() playervar "[stateMachine.del] Dispatch event to handler based on ultimateState"
 {
   switch (ultimateState) {
     case UltimateState.NORMAL:
@@ -82,6 +82,7 @@ void UltEventHandler_Normal() playervar "[stateMachine.del] Handle event for NOR
       DisallowButton(EventPlayer(), Button.Ability2);
 
       ForcePlayerHero(EventPlayer(), ultimateHero);
+      ultimateHero = false;
 
       if (ability1AllowedHeroes.Contains(HeroOf())) {
         AllowButton(EventPlayer(), Button.Ability1);
@@ -273,6 +274,7 @@ if (ultimateState == UltimateState.NORMAL)
 if (UltimateChargePercent() == 100)
 if (IsAbilitiesLocked() == false)
 if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+if (trueHero != ultimateHero)
 {
   DispatchPreparingUltEvent(PreparingUltEvent.STATE_ENTER);
   DispatchUltimateEvent(UltimateEvent.ULT_ACTIVATION);

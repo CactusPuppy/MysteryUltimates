@@ -95,11 +95,6 @@ rule: "Global credit HUD"
   }
 }
 
-rule: "Prevent player from actually using their ultimate initially"
-Event.OngoingPlayer
-{
-  DisallowButton(EventPlayer(), Button.Ultimate);
-}
 
 rule: "Track player's true hero"
 Event.OngoingPlayer
@@ -108,14 +103,18 @@ if (ultimateState == UltimateState.NORMAL)
 if (trueHero != HeroOf())
 {
   trueHero = HeroOf();
+
+  if (HeroOf() == ultimateHero) {
+    AllowButton(EventPlayer(), Button.Ultimate);
+  } else {
+    DisallowButton(EventPlayer(), Button.Ultimate);
+    PreloadHero(EventPlayer(), ultimateHero);
+  }
 }
 
 playervar Hero[] eligibleHeroSwaps;
 
-rule: "Once player reaches their ultimate, choose an ultimate hero based"
-Event.OngoingPlayer
-if (ultimateState == UltimateState.NORMAL)
-if (UltimateChargePercent() == 100)
+void ChooseNewUltimateHero() playervar "[SUB]: Choose a new ultimateHero"
 {
   if (DEBUG_MODE && DEBUG_SHOULD_FORCE_ULTIMATE_HERO) {
     ultimateHero = DEBUG_ULTIMATE_HERO;
@@ -132,8 +131,33 @@ if (UltimateChargePercent() == 100)
 
     ultimateHero = RandomValueInArray(eligibleHeroSwaps);
   }
-  # Preload the hero that the player will be swapping to when they ult
-  PreloadHero(EventPlayer(), ultimateHero);
+
+  # If the ultimateHero matches their hero right now, then we can allow native ultimate.
+  # Otherwise, we need to disable the ultimate button.
+  if (ultimateHero == HeroOf()) {
+    AllowButton(EventPlayer(), Button.Ultimate);
+  } else {
+    DisallowButton(EventPlayer(), Button.Ultimate);
+    # Preload the hero that the player will be swapping to when they ult
+    PreloadHero(EventPlayer(), ultimateHero);
+  }
+}
+
+rule: "Choose the next ultimate hero when the player enters NORMAL mode"
+Event.OngoingPlayer
+if (HasSpawned())
+if (ultimateState == UltimateState.NORMAL)
+{
+  ChooseNewUltimateHero();
+}
+
+rule: "If player used their native ultimate, choose a new ultimate hero after their ult is done"
+Event.OngoingPlayer
+if (HasSpawned())
+if (IsUsingUltimate() || IsDuplicating())
+{
+  WaitUntil(!IsUsingUltimate() && !IsDuplicating(), 1000000);
+  ChooseNewUltimateHero();
 }
 
 playervar Number extendedUltPercentLeft;
