@@ -335,7 +335,7 @@ Event.OngoingPlayer
 if (ultimateState == UltimateState.PREPARING_ULT)
 if (preparingUltState == PreparingUltState.ACTIVATING_ULT)
 if (IsButtonHeld(EventPlayer(), Button.Ultimate))
-if (UltimateChargePercent() == 100)
+if (UltimateChargePercent() == 0)
 {
   DispatchPreparingUltEvent(PreparingUltEvent.PRESSED_ULTIMATE);
   WaitUntil(ultimateState != UltimateState.PREPARING_ULT, 1);
