@@ -8,6 +8,7 @@ import "stateMachine.del";
 
 
 playervar Hero trueHero;
+playervar Hero ultimateHero;
 playervar Boolean hackedAbilityLockout;
 
 globalvar Boolean FORCE_NON_NATIVE_ULTIMATE = WorkshopSettingToggle("Settings", "Force Random Ultimate To Be Non-Native", true, 0);
@@ -106,6 +107,32 @@ if (ultimateState == UltimateState.NORMAL)
 if (trueHero != HeroOf())
 {
   trueHero = HeroOf();
+}
+
+playervar Hero[] eligibleHeroSwaps;
+
+rule: "Once player reaches their ultimate, choose an ultimate hero based"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.NORMAL)
+if (UltimateChargePercent() == 100)
+{
+  if (DEBUG_MODE && DEBUG_SHOULD_FORCE_ULTIMATE_HERO) {
+    ultimateHero = DEBUG_ULTIMATE_HERO;
+  } else {
+    eligibleHeroSwaps = AllHeroes();
+
+    if (RANDOM_ULTIMATE_MATCHES_ROLE) {
+      if (AllTankHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllTankHeroes();
+      else if (AllDamageHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllDamageHeroes();
+      else if (AllSupportHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllSupportHeroes();
+    }
+
+    if (FORCE_NON_NATIVE_ULTIMATE) eligibleHeroSwaps.ModRemoveByValue(HeroOf());
+
+    ultimateHero = RandomValueInArray(eligibleHeroSwaps);
+  }
+  # Preload the hero that the player will be swapping to when they ult
+  PreloadHero(EventPlayer(), ultimateHero);
 }
 
 playervar Number extendedUltPercentLeft;

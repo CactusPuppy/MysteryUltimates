@@ -73,7 +73,6 @@ recursive void UltimateEventHandler() playervar "[stateMachine.del] Dispatch eve
   }
 }
 
-playervar Hero[] eligibleHeroSwaps;
 
 void UltEventHandler_Normal() playervar "[stateMachine.del] Handle event for NORMAL state"
 {
@@ -82,20 +81,7 @@ void UltEventHandler_Normal() playervar "[stateMachine.del] Handle event for NOR
       DisallowButton(EventPlayer(), Button.Ability1);
       DisallowButton(EventPlayer(), Button.Ability2);
 
-      if (DEBUG_MODE && DEBUG_SHOULD_FORCE_ULTIMATE_HERO) {
-        ForcePlayerHero(EventPlayer(), DEBUG_ULTIMATE_HERO);
-      } else {
-        eligibleHeroSwaps = AllHeroes();
-
-        if (RANDOM_ULTIMATE_MATCHES_ROLE) {
-          if (AllTankHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllTankHeroes();
-          else if (AllDamageHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllDamageHeroes();
-          else if (AllSupportHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllSupportHeroes();
-        }
-
-        if (FORCE_NON_NATIVE_ULTIMATE) eligibleHeroSwaps.ModRemoveByValue(HeroOf());
-        ForcePlayerHero(EventPlayer(), RandomValueInArray(eligibleHeroSwaps));
-      }
+      ForcePlayerHero(EventPlayer(), ultimateHero);
 
       if (ability1AllowedHeroes.Contains(HeroOf())) {
         AllowButton(EventPlayer(), Button.Ability1);
@@ -194,6 +180,8 @@ void PreparingUltEventHandler_SwitchingHeroes() playervar "[stateMachine.del] Ha
 {
   switch (preparingUltEvent) {
     case PreparingUltEvent.HERO_SWAPPED:
+      # Begin preloading the trueHero for when the player swaps back
+      PreloadHero(EventPlayer(), trueHero);
       SetStallDuration();
       if (ultCastStallDuration > 0) {
         preparingUltState = PreparingUltState.STALLING;
