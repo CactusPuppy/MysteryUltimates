@@ -175,15 +175,34 @@ if (IsButtonHeld(EventPlayer(), Button.Melee))
 
 globalvar Boolean IsInSlowMotion;
 
-rule: "When player hits reload, toggle slow motion"
+rule: "When player hits reload and crouch, toggle slow motion"
 Event.OngoingPlayer
 if (DEBUG_MODE)
 if (IsButtonHeld(EventPlayer(), Button.Reload))
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
 {
   if (IsInSlowMotion) {
     SetSlowMotion(100);
   } else {
-    SetSlowMotion(33);
+    SetSlowMotion(10);
   }
   IsInSlowMotion = !IsInSlowMotion;
+}
+
+rule: "When player holds crouch for 2 seconds, swap their hero"
+Event.OngoingPlayer
+if (DEBUG_MODE)
+if (IsButtonHeld(EventPlayer(), Button.Crouch))
+{
+  Wait(2, WaitBehavior.AbortWhenFalse);
+  Vector pos = PositionOf(EventPlayer());
+  Vector facing = FacingDirectionOf(EventPlayer());
+  SetAllowedHeroes(EventPlayer(), AllHeroes().Remove(HeroOf(EventPlayer())));
+  WaitUntil(!HasSpawned(EventPlayer()), 1);
+  ResetHeroAvailability();
+  WaitUntil(HasSpawned(EventPlayer()), 1000000);
+  Teleport(EventPlayer(), pos);
+  StartFacing(EventPlayer(), facing, 1000, Relative.ToWorld, FacingRev.None);
+  WaitUntil(AngleBetweenVectors(FacingDirectionOf(EventPlayer()), facing) < 0.1, 1000000);
+  StopFacing(EventPlayer());
 }
