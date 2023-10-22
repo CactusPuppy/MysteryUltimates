@@ -110,12 +110,25 @@ if (trueHero != HeroOf())
 {
   trueHero = HeroOf();
 
+  # Prevent swapping to a different role
+  if (AllDamageHeroes().Contains(trueHero)) SetAllowedHeroes(EventPlayer(), AllDamageHeroes());
+  else if (AllTankHeroes().Contains(trueHero)) SetAllowedHeroes(EventPlayer(), AllTankHeroes());
+  else if (AllSupportHeroes().Contains(trueHero)) SetAllowedHeroes(EventPlayer(), AllSupportHeroes());
+
   if (HeroOf() == ultimateHero) {
     AllowButton(EventPlayer(), Button.Ultimate);
   } else {
     DisallowButton(EventPlayer(), Button.Ultimate);
     PreloadHero(EventPlayer(), ultimateHero);
   }
+}
+
+rule: "If the player despawns for at least 0.25 seconds, reset their hero availability"
+Event.OngoingPlayer
+if (!HasSpawned())
+{
+  Wait(0.25, WaitBehavior.AbortWhenFalse);
+  ResetHeroAvailability();
 }
 
 playervar Hero[] eligibleHeroSwaps;
