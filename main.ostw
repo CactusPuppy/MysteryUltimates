@@ -8,7 +8,6 @@ import "stateMachine.del";
 
 playervar Hero trueHero;
 playervar Hero ultimateHero;
-playervar Boolean hackedAbilityLockout;
 
 globalvar Boolean FORCE_NON_NATIVE_ULTIMATE = WorkshopSettingToggle("Settings", "Force Random Ultimate To Be Non-Native", true, 0);
 globalvar Boolean RANDOM_ULTIMATE_MATCHES_ROLE = WorkshopSettingToggle("Settings", "Force Random Ultimate To Match Role", false, 1);
@@ -224,7 +223,7 @@ void SetLingerDuration() playervar "[SUB]: Set linger duration"
   }
 }
 
-rule: "When player melees, give them 25% ult charge"
+rule: "DEBUG: When player melees, give them 25% ult charge"
 Event.OngoingPlayer
 if (DEBUG_MODE)
 if (IsButtonHeld(EventPlayer(), Button.Melee))
@@ -234,7 +233,7 @@ if (IsButtonHeld(EventPlayer(), Button.Melee))
 
 globalvar Boolean IsInSlowMotion;
 
-rule: "When player hits reload and crouch, toggle slow motion"
+rule: "DEBUG: When player hits reload and crouch, toggle slow motion"
 Event.OngoingPlayer
 if (DEBUG_MODE)
 if (IsButtonHeld(EventPlayer(), Button.Reload))
@@ -248,7 +247,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
   IsInSlowMotion = !IsInSlowMotion;
 }
 
-rule: "When player holds crouch for 2 seconds, swap their hero"
+rule: "DEBUG: When player holds crouch for 2 seconds, swap their hero"
 Event.OngoingPlayer
 if (DEBUG_MODE)
 if (IsButtonHeld(EventPlayer(), Button.Crouch))
