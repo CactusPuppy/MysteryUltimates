@@ -2,8 +2,7 @@ import "settings.lobby";
 import "trackAbilityLockout.del";
 
 
-// FIXME: Remove this debug
-// import "../utils/ultRefill.del";
+import "OSTWUtils/OnScreenText.del";
 import "stateMachine.del";
 
 
@@ -13,11 +12,11 @@ playervar Boolean hackedAbilityLockout;
 
 globalvar Boolean FORCE_NON_NATIVE_ULTIMATE = WorkshopSettingToggle("Settings", "Force Random Ultimate To Be Non-Native", true, 0);
 globalvar Boolean RANDOM_ULTIMATE_MATCHES_ROLE = WorkshopSettingToggle("Settings", "Force Random Ultimate To Match Role", false, 1);
+globalvar Boolean SHOW_ULTIMATE_HERO = WorkshopSettingToggle("Settings", "Show Randomized Ultimate Hero", false, 3);
 
 globalvar Boolean DEBUG_MODE = WorkshopSettingToggle("°DEBUG", "Debug Mode Enabled", false, 0);
 globalvar Boolean DEBUG_SHOULD_FORCE_ULTIMATE_HERO = WorkshopSettingToggle("°DEBUG", "Force Ultimate Hero", false, 1);
 globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero("°DEBUG", "Ultimate Hero to Force", Hero.Baptiste, 2);
-globalvar Boolean DEBUG_SHOW_ULTIMATE_HERO = WorkshopSettingToggle("°DEBUG", "Show Randomized Ultimate Hero", false, 3);
 
 globalvar Hero[] placeableUltimateHeroes = [Hero.Baptiste, Hero.Symmetra, Hero.Lifeweaver];
 globalvar Hero[] ability1AllowedHeroes = [Hero.Dva];
@@ -87,6 +86,22 @@ rule: "Global credit HUD"
   }
 }
 
+rule: "Create randomized ultimate hero HUD"
+Event.OngoingPlayer
+if (SHOW_ULTIMATE_HERO)
+{
+  OnScreenText.CreateOnScreenText(
+    VisibleTo: ultimateHero && ultimateState == UltimateState.NORMAL && UltimateChargePercent() == 100 ? EventPlayer() : null,
+    Header: <"<0>: <1>", HeroIconString(ultimateHero), AbilityIconString(ultimateHero, Button.Ultimate)>,
+    PositionX: 0,
+    PositionY: -0.9,
+    Scale: 4,
+    InworldTextRev.VisibleToPositionAndString,
+    Color.White,
+    Spectators.VisibleNever,
+    EventPlayer()
+  );
+}
 
 rule: "Track player's true hero"
 Event.OngoingPlayer
@@ -251,22 +266,3 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
   StopFacing(EventPlayer());
 }
 
-rule: "Create randomized ultimate hero HUD"
-Event.OngoingPlayer
-if (DEBUG_MODE)
-if (DEBUG_SHOW_ULTIMATE_HERO)
-{
-  CreateHudText(
-    ultimateHero && ultimateState == UltimateState.NORMAL ? EventPlayer() : null,
-    Header: <"<0>: <1>", HeroIconString(ultimateHero), AbilityIconString(ultimateHero, Button.Ultimate)>,
-    Subheader: "Upcoming Ultimate Hero",
-    Text: ultimateHero,
-    Location: Location.Left,
-    SortOrder: -10,
-    HeaderColor: Color.Blue,
-    SubheaderColor: Color.White,
-    TextColor: Color.White,
-    Reevaluation: HudTextRev.VisibleToAndString,
-    Spectators: Spectators.VisibleNever
-  );
-}
