@@ -199,6 +199,20 @@ void PreparingUltEventHandler_SwitchingHeroes() playervar "[stateMachine.del] Ha
   }
 }
 
+rule: "[stateMachine.del] Perform actions when stalling is activated"
+Event.OngoingPlayer
+if (ultimateState == UltimateState.PREPARING_ULT)
+if (preparingUltState == PreparingUltState.STALLING)
+{
+  switch (HeroOf()) {
+    case Hero.Dva:
+      StartHoldingButton(EventPlayer(), Button.Ability1);
+      Wait(1);
+      StopHoldingButton(EventPlayer(), Button.Ability1);
+      break;
+  }
+}
+
 void PreparingUltEventHandler_Stalling() playervar "[stateMachine.del] Handle event for STALLING state"
 {
   switch (preparingUltEvent) {
