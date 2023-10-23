@@ -249,9 +249,15 @@ void RestoreTrueHeroAndReturnToNormal() playervar "[stateMachine.del] Restore th
   AllowButton(EventPlayer(), Button.Ability1);
   AllowButton(EventPlayer(), Button.Ability2);
   DisallowButton(EventPlayer(), Button.Ultimate);
-  WaitUntil(IsAlive(), 1000000);
+  WaitUntil(IsAlive() || !HasSpawned(), 1000000);
+  if (!HasSpawned()) {
+    ultimateState = UltimateState.NORMAL;
+    return;
+  }
+
   ForcePlayerHero(EventPlayer(), trueHero);
   WaitUntil(HeroOf() == trueHero, 1000000);
+
   SetUltimateCharge(EventPlayer(), 0);
   async! OverwriteHeroSwapUltTransfer();
   StopForcingHero(EventPlayer());

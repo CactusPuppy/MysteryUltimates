@@ -127,6 +127,7 @@ Event.OngoingPlayer
 if (!HasSpawned())
 {
   Wait(0.25, WaitBehavior.AbortWhenFalse);
+  StopForcingHero(EventPlayer());
   ResetHeroAvailability();
 }
 
@@ -186,6 +187,19 @@ if (UltimateChargePercent() == 100)
 if (ultimateHero != trueHero)
 {
   PreloadHero(EventPlayer(), ultimateHero);
+}
+
+rule: "When the game is between rounds, issue a DIED event to knock all players out of their mystery ult"
+Event.OngoingPlayer
+if (IsBetweenRounds())
+if (!IsMatchComplete())
+{
+  WaitUntil(!IsBetweenRounds(), 1000000);
+
+  # Kick the player out of their mystery ult if they're still in it
+  AbortIf(ultimateState == UltimateState.NORMAL);
+  DispatchUltimateEvent(UltimateEvent.DIED);
+  DispatchPreparingUltEvent(PreparingUltEvent.STATE_EXIT);
 }
 
 playervar Number extendedUltPercentLeft;
@@ -287,3 +301,19 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
   StopFacing(EventPlayer());
 }
 
+rule: "DEBUG: Shorten assembling heroes in DEBUG_MODE"
+Event.OngoingGlobal
+if (DEBUG_MODE)
+if (IsAssemblingHeroes())
+{
+  Wait(0.1, WaitBehavior.AbortWhenFalse);
+  SetMatchTime(5);
+}
+
+rule: "DEBUG: Say Goodbye to end round"
+Event.OngoingPlayer
+if (DEBUG_MODE)
+if (IsCommunicating(EventPlayer(), Communication.Goodbye))
+{
+  SetMatchTime(0);
+}
