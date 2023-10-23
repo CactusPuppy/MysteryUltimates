@@ -292,9 +292,9 @@ Event.OngoingPlayer
 if (IsAlive())
 if (ultimateState == UltimateState.NORMAL)
 if (UltimateChargePercent() == 100)
-if (IsAbilitiesLocked() == false)
-if (IsButtonHeld(EventPlayer(), Button.Ultimate))
 if (trueHero != ultimateHero)
+if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+if (IsAbilitiesLocked() == false)
 {
   DispatchPreparingUltEvent(PreparingUltEvent.STATE_ENTER);
   DispatchUltimateEvent(UltimateEvent.ULT_ACTIVATION);
