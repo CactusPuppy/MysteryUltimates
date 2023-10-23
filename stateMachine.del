@@ -325,6 +325,9 @@ Event.OngoingPlayer
 if (ultimateState == UltimateState.PREPARING_ULT)
 if (preparingUltState == PreparingUltState.ACTIVATING_ULT || preparingUltState == PreparingUltState.STALLING)
 if (UltimateChargePercent() < 100)
+# This is a hack to get around the fact that some ults can double-fire due to cast time
+# If switching heroes ever stops transferring ult charge, this WILL break
+if (UltimateChargePercent() > 0)
 {
   SetUltimateCharge(EventPlayer(), 100);
   Wait(0.05, WaitBehavior.AbortWhenFalse);
@@ -336,6 +339,7 @@ Event.OngoingPlayer
 if (ultimateState == UltimateState.PREPARING_ULT)
 if (preparingUltState != PreparingUltState.STALLING)
 if (placeableUltimateHeroes.Contains(HeroOf()) == false)
+if (UltimateChargePercent() == 100)
 {
   PressButton(EventPlayer(), Button.Ultimate);
   Wait(0.05, WaitBehavior.AbortWhenFalse);
