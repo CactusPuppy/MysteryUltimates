@@ -104,7 +104,7 @@ void UltEventHandler_Preparing() playervar "[stateMachine.del] Handle event for 
     case UltimateEvent.USED_ULTIMATE:
       AllowButton(EventPlayer(), Button.Ability1);
       AllowButton(EventPlayer(), Button.Ability2);
-      DisallowButton(EventPlayer(), Button.Ultimate);
+      if (!IsDuplicating(EventPlayer())) DisallowButton(EventPlayer(), Button.Ultimate);
       ultimateState = UltimateState.USING_ULT;
       break;
 
@@ -345,6 +345,7 @@ rule: "In the using ult state, if the player gains ult charge, set it back to 0"
 Event.OngoingPlayer
 if (ultimateState == UltimateState.USING_ULT || ultimateState == UltimateState.LINGERING)
 if (UltimateChargePercent() > 0)
+if (!IsDuplicating(EventPlayer()))
 {
   SetUltimateCharge(EventPlayer(), 0);
   MinWait();
