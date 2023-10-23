@@ -13,9 +13,9 @@ globalvar Boolean FORCE_NON_NATIVE_ULTIMATE = WorkshopSettingToggle("Settings", 
 globalvar Boolean RANDOM_ULTIMATE_MATCHES_ROLE = WorkshopSettingToggle("Settings", "Force Random Ultimate To Match Role", false, 1);
 globalvar Boolean SHOW_ULTIMATE_HERO = WorkshopSettingToggle("Settings", "Show Randomized Ultimate Hero", false, 3);
 
-globalvar Boolean DEBUG_MODE = WorkshopSettingToggle("°DEBUG", "Debug Mode Enabled", false, 0);
-globalvar Boolean DEBUG_SHOULD_FORCE_ULTIMATE_HERO = WorkshopSettingToggle("°DEBUG", "Force Ultimate Hero", false, 1);
-globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero("°DEBUG", "Ultimate Hero to Force", Hero.Baptiste, 2);
+globalvar Boolean DEBUG_MODE = WorkshopSettingToggle(" DEBUG", "Debug Mode Enabled", false, 0);
+globalvar Boolean DEBUG_SHOULD_FORCE_ULTIMATE_HERO = WorkshopSettingToggle(" DEBUG", "Force Ultimate Hero", false, 1);
+globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero(" DEBUG", "Ultimate Hero to Force", Hero.Baptiste, 2);
 
 globalvar Hero[] placeableUltimateHeroes = [Hero.Baptiste, Hero.Symmetra, Hero.Lifeweaver];
 globalvar Hero[] ability1AllowedHeroes = [Hero.Dva];
