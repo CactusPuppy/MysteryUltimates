@@ -1,4 +1,5 @@
 import "main.ostw";
+import "preloadPriority.del";
 
 enum UltimateState {
   NORMAL = "NORMAL",
@@ -182,7 +183,9 @@ void PreparingUltEventHandler_SwitchingHeroes() playervar "[stateMachine.del] Ha
   switch (preparingUltEvent) {
     case PreparingUltEvent.HERO_SWAPPED:
       # Begin preloading the trueHero for when the player swaps back
-      PreloadHero(EventPlayer(), trueHero);
+      ultimatePreparedPlayers.ModRemoveByValue(EventPlayer());
+      awaitingReturnPlayers.ModAppend(EventPlayer());
+      ProcessNewPriorityList();
       SetStallDuration();
       if (ultCastStallDuration > 0) {
         preparingUltState = PreparingUltState.STALLING;
@@ -267,6 +270,8 @@ void RestoreTrueHeroAndReturnToNormal() playervar "[stateMachine.del] Restore th
   # If the player isn't spawned, we're most likely between rounds and need to just move them into the NORMAL state
   # Another rule will handle resetting their hero availablity [main.ostw]
   if (!HasSpawned()) {
+    awaitingReturnPlayers.ModRemoveByValue(EventPlayer());
+    ProcessNewPriorityList();
     ultimateState = UltimateState.NORMAL;
     return;
   }
@@ -277,6 +282,8 @@ void RestoreTrueHeroAndReturnToNormal() playervar "[stateMachine.del] Restore th
   SetUltimateCharge(EventPlayer(), 0);
   async! OverwriteHeroSwapUltTransfer();
   StopForcingHero(EventPlayer());
+  awaitingReturnPlayers.ModRemoveByValue(EventPlayer());
+  ProcessNewPriorityList();
   ultimateState = UltimateState.NORMAL;
 }
 

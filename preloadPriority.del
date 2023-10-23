@@ -1,0 +1,40 @@
+import "main.ostw";
+
+void RemovePreload(Player p) {
+  PreloadHero(p, HasSpawned(p) ? HeroOf(p) : []);
+}
+// PRIORITY 1
+globalvar Player[] ultimatePreparedPlayers = [];
+globalvar Player[] awaitingReturnPlayers = [];
+globalvar Player[] finalPriorityList;
+globalvar Player[] draftPriorityList;
+
+globalvar Number i;
+
+void ProcessNewPriorityList() "[preloadPriority.del] Generate a new preload priority list and preload the right players"
+{
+  # Generate the draft priority list
+  draftPriorityList = [];
+  draftPriorityList.ModAppend(ultimatePreparedPlayers);
+  draftPriorityList.ModAppend(awaitingReturnPlayers);
+  draftPriorityList = draftPriorityList.Slice(0, 8);
+
+  # Remove preload for all players who are in the previous priority list but not in the new one
+  for (i = 0; finalPriorityList.Length; 1) {
+    if (draftPriorityList.IndexOf(finalPriorityList[i]) == -1) {
+      if (DEBUG_MODE) LogToInspector($"Removing preload for {finalPriorityList[i]}");
+      RemovePreload(finalPriorityList[i]);
+    }
+  }
+
+  # Update the final priority list
+  finalPriorityList = draftPriorityList;
+
+  # Preload all players who are in the final priority list
+  for (i = 0; finalPriorityList.Length; 1) {
+    if (DEBUG_MODE) LogToInspector($"Preloading {finalPriorityList[i]}'s hero, which is {finalPriorityList[i].ultimateState == UltimateState.NORMAL ? finalPriorityList[i].ultimateHero : trueHero}");
+    # If player is in Ultimate state NORMAL, preload the ultimateHero.
+    # Otherwise, preload their trueHero.
+    PreloadHero(finalPriorityList[i], finalPriorityList[i].ultimateState == UltimateState.NORMAL ? finalPriorityList[i].ultimateHero : finalPriorityList[i].trueHero);
+  }
+}

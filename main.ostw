@@ -157,8 +157,6 @@ void ChooseNewUltimateHero() playervar "[SUB]: Choose a new ultimateHero"
     AllowButton(EventPlayer(), Button.Ultimate);
   } else {
     DisallowButton(EventPlayer(), Button.Ultimate);
-    # Preload the hero that the player will be swapping to when they ult
-    PreloadHero(EventPlayer(), ultimateHero);
   }
 }
 
@@ -180,14 +178,15 @@ if (HeroOf() == ultimateHero)
   ChooseNewUltimateHero();
 }
 
-rule: "When player earns their ult, if ultimateHero is not their trueHero, preload ultimateHero"
+rule: "When player earns their ult, if ultimateHero is not their trueHero, add player to ultimatePreparedPlayers"
 Event.OngoingPlayer
 if (HasSpawned())
 if (ultimateState == UltimateState.NORMAL)
 if (UltimateChargePercent() == 100)
 if (ultimateHero != trueHero)
 {
-  PreloadHero(EventPlayer(), ultimateHero);
+  ultimatePreparedPlayers.ModAppend(EventPlayer());
+  ProcessNewPriorityList();
 }
 
 rule: "When the game is between rounds, issue a DIED event to knock all players out of their mystery ult"
