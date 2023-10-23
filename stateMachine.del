@@ -264,6 +264,8 @@ void RestoreTrueHeroAndReturnToNormal() playervar "[stateMachine.del] Restore th
   AllowButton(EventPlayer(), Button.Ability2);
   DisallowButton(EventPlayer(), Button.Ultimate);
   WaitUntil(IsAlive() || !HasSpawned(), 1000000);
+  # If the player isn't spawned, we're most likely between rounds and need to just move them into the NORMAL state
+  # Another rule will handle resetting their hero availablity [main.ostw]
   if (!HasSpawned()) {
     ultimateState = UltimateState.NORMAL;
     return;
