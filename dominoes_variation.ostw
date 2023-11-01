@@ -15,6 +15,7 @@ rule: "If player is flagged to trigger a domino, send the appropriate events to 
 Event.OngoingPlayer
 if (triggerDomino)
 {
+  LogToInspector(<"Attempting to trigger domino for <0>", EventPlayer()>);
   triggerDomino = false;
 
   if (ultimateState != UltimateState.NORMAL) {
@@ -34,6 +35,7 @@ void TriggerDomino() playervar "[SUB] Process domino trigger"
 {
   # Wait for a random delay between the min and max delay
   dominoesDelay = RandomReal(dominoesMinDelay, dominoesMaxDelay);
+  LogToInspector(<"Waiting <0> seconds to trigger domino for <1>", dominoesDelay, EventPlayer()>);
   ultimatePreparedPlayers.ModAppend(EventPlayer());
   ProcessNewPriorityList();
 
@@ -46,12 +48,14 @@ void TriggerDomino() playervar "[SUB] Process domino trigger"
   }
 
   if (!dominoesAutoFillUltimate && UltimateChargePercent() != 100) {
+    LogToInspector(<"Player <0> does not have full ultimate charge", EventPlayer()>);
     ultimatePreparedPlayers.ModRemoveByValue(EventPlayer());
     ProcessNewPriorityList();
     return;
   }
 
 
+  LogToInspector(<"Triggering domino for <0>", EventPlayer()>);
   DispatchPreparingUltEvent(PreparingUltEvent.STATE_ENTER);
   DispatchUltimateEvent(UltimateEvent.ULT_ACTIVATION);
 
@@ -73,6 +77,7 @@ Event.OngoingPlayer
 if (ultimateState == UltimateState.NORMAL)
 {
   WaitUntil([UltimateState.USING_ULT, UltimateState.LINGERING].Contains(ultimateState), 1000000);
+  LogToInspector($"{EventPlayer()}-|-{ultimateState}");
   Player[] dominoTargets = PlayersWithinRadius(EventPlayer().Position(), dominoesRadius, Team.All, RadiusLOS.Off).Remove(EventPlayer()).FilteredArray((p) => p.IsAlive());
   dominoTargets.triggerDomino = true;
 
@@ -80,4 +85,19 @@ if (ultimateState == UltimateState.NORMAL)
   dominoesCooldown = initialDominoesCooldown;
   ChaseVariableOverTime(dominoesCooldown, 0, initialDominoesCooldown, TimeChaseReevaluation.None);
   Loop();
+}
+
+rule: "[DEBUG] Show cooldown"
+Event.OngoingPlayer
+if (DEBUG_MODE)
+{
+  CreateHudText(
+    EventPlayer(),
+    ultimateState,
+    <"dominoCooldown: <0>", dominoesCooldown>,
+    <"delay: <0>", dominoesDelay>,
+    HeaderColor: Color.Orange,
+    Location: Location.Left,
+    SortOrder: 0,
+    Reevaluation: HudTextRev.VisibleToAndString);
 }
