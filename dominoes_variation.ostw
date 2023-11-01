@@ -79,4 +79,5 @@ if (ultimateState == UltimateState.NORMAL)
   WaitUntil(ultimateState == UltimateState.NORMAL, 1000000);
   dominoesCooldown = initialDominoesCooldown;
   ChaseVariableOverTime(dominoesCooldown, 0, initialDominoesCooldown, TimeChaseReevaluation.None);
+  Loop();
 }
