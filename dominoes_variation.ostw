@@ -5,7 +5,7 @@ globalvar Boolean dominoesAutoFillUltimate = WorkshopSettingToggle("ºDominoes V
 globalvar Number dominoesMinDelay = WorkshopSettingInteger("ºDominoes Variation", "Domino Min Delay", 0, 0, 30, 10);
 globalvar Number dominoesMaxDelay = WorkshopSettingInteger("ºDominoes Variation", "Domino Max Delay", 3, 0, 30, 20);
 globalvar Boolean dominoTriggersAfterDeath = WorkshopSettingToggle("ºDominoes Variation", "Domino Triggers After Death", true, 30);
-globalvar Number initialDominoesCooldown = WorkshopSettingInteger("ºDominoes Variation", "Player Domino Cooldown", 5, 1, 30, 100);
+globalvar Number initialDominoesCooldown = WorkshopSettingInteger("ºDominoes Variation", "Player Domino Cooldown", 10, 1, 30, 100);
 
 playervar Number dominoesCooldown;
 playervar Boolean triggerDomino;
