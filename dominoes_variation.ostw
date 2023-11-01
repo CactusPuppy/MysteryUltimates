@@ -3,7 +3,7 @@ import "main.ostw";
 globalvar Number dominoesRadius = WorkshopSettingInteger("ºDominoes Variation", "Domino Radius", 20, 1, 200, 0);
 globalvar Boolean dominoesAutoFillUltimate = WorkshopSettingToggle("ºDominoes Variation", "Domino Auto Fill Ultimate", true, 0);
 globalvar Number dominoesMinDelay = WorkshopSettingInteger("ºDominoes Variation", "Domino Min Delay", 0, 0, 30, 10);
-globalvar Number dominoesMaxDelay = WorkshopSettingInteger("ºDominoes Variation", "Domino Max Delay", 5, 0, 30, 20);
+globalvar Number dominoesMaxDelay = WorkshopSettingInteger("ºDominoes Variation", "Domino Max Delay", 3, 0, 30, 20);
 globalvar Boolean dominoTriggersAfterDeath = WorkshopSettingToggle("ºDominoes Variation", "Domino Triggers After Death", true, 30);
 globalvar Number initialDominoesCooldown = WorkshopSettingInteger("ºDominoes Variation", "Player Domino Cooldown", 5, 1, 30, 100);
 
