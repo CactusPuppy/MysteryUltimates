@@ -9,40 +9,74 @@ globalvar Number initialDominoesCooldown = WorkshopSettingInteger("ºDominoes Va
 
 playervar Number dominoesCooldown;
 playervar Boolean triggerDomino;
+playervar Number dominoesDelay;
 
 rule: "If player is flagged to trigger a domino, send the appropriate events to the main script"
 Event.OngoingPlayer
 if (triggerDomino)
 {
   triggerDomino = false;
-  AbortIf(dominoesCooldown > 0);
 
+  if (ultimateState != UltimateState.NORMAL) {
+    LogToInspector(<"Player <0> is not in the NORMAL state (<1>)", EventPlayer(), ultimateState>);
+    return;
+  }
+
+  if (dominoesCooldown > 0) {
+    LogToInspector(<"Domino on cooldown (<1>) for <0>", EventPlayer(), dominoesCooldown>);
+    return;
+  }
+
+  async! TriggerDomino();
+}
+
+void TriggerDomino() playervar "[SUB] Process domino trigger"
+{
   # Wait for a random delay between the min and max delay
-  Number delay = RandomInteger(dominoesMinDelay, dominoesMaxDelay);
+  dominoesDelay = RandomReal(dominoesMinDelay, dominoesMaxDelay);
+  ultimatePreparedPlayers.ModAppend(EventPlayer());
+  ProcessNewPriorityList();
+
 
   if (!dominoTriggersAfterDeath) {
-    WaitUntil(IsDead(), delay);
+    WaitUntil(IsDead(), dominoesDelay);
     AbortIf(IsDead());
   } else {
-    Wait(delay);
+    Wait(dominoesDelay);
   }
 
-  AbortIf(!dominoesAutoFillUltimate && UltimateChargePercent() != 100);
-
-  SetUltimateCharge(EventPlayer(), 100);
-
-  while (ultimateState == UltimateState.NORMAL) {
-    PressButton(EventPlayer(), Button.Ultimate);
-    Wait(0.1);
+  if (!dominoesAutoFillUltimate && UltimateChargePercent() != 100) {
+    ultimatePreparedPlayers.ModRemoveByValue(EventPlayer());
+    ProcessNewPriorityList();
+    return;
   }
+
+
+  DispatchPreparingUltEvent(PreparingUltEvent.STATE_ENTER);
+  DispatchUltimateEvent(UltimateEvent.ULT_ACTIVATION);
+
+  WaitUntil(ultimateState != UltimateState.NORMAL, 1);
+
+  if (placeableUltimateHeroes.Contains(HeroOf())) async SimulateUltButtonPress();
+}
+
+void SimulateUltButtonPress() playervar "[SUB]: Stop holding ultimate button delayed"
+{
+  Wait(0.1);
+  StartHoldingButton(EventPlayer(), Button.Ultimate);
+  Wait(0.25);
+  StopHoldingButton(EventPlayer(), Button.Ultimate);
 }
 
 rule: "When a player moves out of the NORMAL state, flag all players nearby to trigger a domino"
 Event.OngoingPlayer
 if (ultimateState == UltimateState.NORMAL)
 {
-  WaitUntil(ultimateState != UltimateState.NORMAL, 1000000);
-  PlayersWithinRadius(EventPlayer().Position(), dominoesRadius, Team.All, RadiusLOS.Off).FilteredArray((p) => p.IsAlive()).triggerDomino = true;
+  WaitUntil([UltimateState.USING_ULT, UltimateState.LINGERING].Contains(ultimateState), 1000000);
+  Player[] dominoTargets = PlayersWithinRadius(EventPlayer().Position(), dominoesRadius, Team.All, RadiusLOS.Off).Remove(EventPlayer()).FilteredArray((p) => p.IsAlive());
+  dominoTargets.triggerDomino = true;
+
+  WaitUntil(ultimateState == UltimateState.NORMAL, 1000000);
   dominoesCooldown = initialDominoesCooldown;
   ChaseVariableOverTime(dominoesCooldown, 0, initialDominoesCooldown, TimeChaseReevaluation.None);
 }
