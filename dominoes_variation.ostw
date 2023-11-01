@@ -1,15 +1,43 @@
+import "dominoes_settings.lobby";
 import "main.ostw";
 
 globalvar Number dominoesRadius = WorkshopSettingInteger("ºDominoes Variation", "Domino Radius", 20, 1, 200, 0);
 globalvar Boolean dominoesAutoFillUltimate = WorkshopSettingToggle("ºDominoes Variation", "Domino Auto Fill Ultimate", true, 0);
-globalvar Number dominoesMinDelay = WorkshopSettingInteger("ºDominoes Variation", "Domino Min Delay", 0, 0, 30, 10);
-globalvar Number dominoesMaxDelay = WorkshopSettingInteger("ºDominoes Variation", "Domino Max Delay", 3, 0, 30, 20);
+globalvar Number dominoesMinDelay = WorkshopSettingReal("ºDominoes Variation", "Domino Min Delay", 1.5, 0, 30, 10);
+globalvar Number dominoesMaxDelay = WorkshopSettingReal("ºDominoes Variation", "Domino Max Delay", 5, 0, 30, 20);
 globalvar Boolean dominoTriggersAfterDeath = WorkshopSettingToggle("ºDominoes Variation", "Domino Triggers After Death", true, 30);
 globalvar Number initialDominoesCooldown = WorkshopSettingInteger("ºDominoes Variation", "Player Domino Cooldown", 10, 1, 30, 100);
 
 playervar Number dominoesCooldown;
 playervar Boolean triggerDomino;
 playervar Number dominoesDelay;
+
+rule: "Global credit HUD"
+{
+  CreateHudText(
+    AllPlayers(),
+    Header: " Code: KNT1A ",
+    Subheader: <"<0> Mystery Ult Dominoes", IconString(Icon.QuestionMark)>,
+    Text: "By CactusPuppy",
+    Location: Location.Right,
+    SortOrder: -10,
+    HeaderColor: Color.Orange,
+    SubheaderColor: Color.White,
+    TextColor: CustomColor(255, 255, 255, 128),
+    Reevaluation: HudTextRev.VisibleTo,
+    Spectators: Spectators.VisibleAlways
+  );
+  if (DEBUG_MODE) {
+    CreateHudText(
+      AllPlayers(),
+      Subheader: "DEBUG MODE ENABLED",
+      Location: Location.Right,
+      SortOrder: -9,
+      SubheaderColor: rainbow,
+      Reevaluation: HudTextRev.VisibleToAndColor
+    );
+  }
+}
 
 rule: "If player is flagged to trigger a domino, send the appropriate events to the main script"
 Event.OngoingPlayer
@@ -33,6 +61,7 @@ if (triggerDomino)
 
 void TriggerDomino() playervar "[SUB] Process domino trigger"
 {
+  BigMessage(EventPlayer(), "Domino Triggered! Prepare to ult...");
   # Wait for a random delay between the min and max delay
   dominoesDelay = RandomReal(dominoesMinDelay, dominoesMaxDelay);
   LogToInspector(<"Waiting <0> seconds to trigger domino for <1>", dominoesDelay, EventPlayer()>);

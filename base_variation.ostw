@@ -1,0 +1,30 @@
+import "base_settings.lobby";
+
+rule: "Global credit HUD"
+{
+  CreateHudText(
+    AllPlayers(),
+    Header: " Code: 12MET ",
+    Subheader: <"<0> Mystery Ultimates", IconString(Icon.QuestionMark)>,
+    Text: "By CactusPuppy",
+    Location: Location.Right,
+    SortOrder: -10,
+    HeaderColor: Color.Orange,
+    SubheaderColor: Color.White,
+    TextColor: CustomColor(255, 255, 255, 128),
+    Reevaluation: HudTextRev.VisibleTo,
+    Spectators: Spectators.VisibleAlways
+  );
+  if (DEBUG_MODE) {
+    CreateHudText(
+      AllPlayers(),
+      Subheader: "DEBUG MODE ENABLED",
+      Location: Location.Right,
+      SortOrder: -9,
+      SubheaderColor: rainbow,
+      Reevaluation: HudTextRev.VisibleToAndColor
+    );
+  }
+}
+
+import "main.ostw";

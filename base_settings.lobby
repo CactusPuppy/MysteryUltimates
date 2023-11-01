@@ -1,6 +1,6 @@
 {
   "Mode Name": "Mystery Ultimates",
-  "Description": "Like Mystery Heroes, but only for your ultimate! Every time you press Q, a random ultimate will be used instead.",
+  "Description": "Your ult is completely random! Every use of your ultimate grants you a random hero's ultimate instead.",
   "Modes": {
     "All": {
       "Competitive Rules": true,

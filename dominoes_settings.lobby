@@ -1,0 +1,19 @@
+{
+  "Mode Name": "Mystery Ultimate Dominoes",
+  "Description": "Every ultimate activation gives a random ult, and one person using their ultimate will cause everyone else around them to use ultimate as well!",
+  "Modes": {
+    "All": {
+      "Competitive Rules": true,
+      "Limit Roles": "1 Tank 2 Offense 2 Support"
+    },
+    "Control": {},
+    "Escort": {},
+    "Flashpoint": {},
+    "Hybrid": {},
+    "Push": {}
+  },
+  "Lobby": {
+    "Max Team 1 Players": 5,
+    "Max Team 2 Players": 5
+  }
+}
