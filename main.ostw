@@ -18,7 +18,7 @@ globalvar Boolean DEBUG_SHOULD_FORCE_ULTIMATE_HERO = WorkshopSettingToggle(" D
 globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero(" DEBUG", "Ultimate Hero to Force", Hero.Baptiste, 2);
 
 globalvar Hero[] placeableUltimateHeroes = [Hero.Baptiste, Hero.Symmetra, Hero.Lifeweaver];
-globalvar Hero[] ability1AllowedHeroes = [Hero.Dva];
+globalvar Hero[] ability1AllowedHeroes = [Hero.Dva, Hero.Echo];
 globalvar Hero[] ability2AllowedHeroes = [];
 
 // Rainbow code by PharingWell and Provoxin
