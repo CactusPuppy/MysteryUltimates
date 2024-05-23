@@ -8,13 +8,18 @@ import "stateMachine.del";
 playervar Hero trueHero;
 playervar Hero ultimateHero;
 
-globalvar Boolean FORCE_NON_NATIVE_ULTIMATE = WorkshopSettingToggle("Settings", "Force Random Ultimate To Be Non-Native", true, 0);
-globalvar Boolean RANDOM_ULTIMATE_MATCHES_ROLE = WorkshopSettingToggle("Settings", "Force Random Ultimate To Match Role", false, 1);
-globalvar Boolean SHOW_ULTIMATE_HERO = WorkshopSettingToggle("Settings", "Show Randomized Ultimate Hero", false, 3);
+globalvar Boolean SHOULD_RESET_HEROES_ON_DESPAWN = true;
+globalvar Boolean FORCE_NON_NATIVE_ULTIMATE = WorkshopSettingToggle("Mystery Ultimates", "Force Random Ultimate To Be Non-Native", true, 0);
+globalvar Boolean RANDOM_ULTIMATE_MATCHES_ROLE = WorkshopSettingToggle("Mystery Ultimates", "Force Random Ultimate To Match Role", false, 1);
+globalvar Boolean SHOW_ULTIMATE_HERO = WorkshopSettingToggle("Mystery Ultimates", "Show Randomized Ultimate Hero", false, 3);
+globalvar Boolean ENFORCE_ROLE_LOCK = WorkshopSettingToggle("Mystery Ultimates", "Enforce Role Lock", true, 4);
 
-globalvar Boolean DEBUG_MODE = WorkshopSettingToggle(" DEBUG", "Debug Mode Enabled", false, 0);
+globalvar Boolean DEBUG_MODE = WorkshopSettingToggle(" DEBUG", "Debug Mode Enabled", false, -1);
+globalvar Boolean DEBUG_MELEE_FOR_ULT_CHARGE = WorkshopSettingToggle(" DEBUG", "Melee for 25% Ult Charge", false, 0);
 globalvar Boolean DEBUG_SHOULD_FORCE_ULTIMATE_HERO = WorkshopSettingToggle(" DEBUG", "Force Ultimate Hero", false, 1);
-globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero(" DEBUG", "Ultimate Hero to Force", Hero.Baptiste, 2);
+globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero(" DEBUG", "Ultimate Hero to Force", Hero.Ana, 2);
+globalvar Boolean DEBUG_LOG_EVENTS = WorkshopSettingToggle(" DEBUG", "Log Events to Inspector (*doesn't need debug mode on)", false, 3);
+globalvar Boolean DEBUG_SHOW_CURRENT_STATE = WorkshopSettingToggle(" DEBUG", "Show Current State", false, 4);
 
 globalvar Hero[] placeableUltimateHeroes = [Hero.Baptiste, Hero.Symmetra, Hero.Lifeweaver];
 globalvar Hero[] ability1AllowedHeroes = [Hero.Dva, Hero.Echo];
@@ -42,6 +47,21 @@ rule: "If not in DEBUG_MODE, disable inspector recording"
   if (!DEBUG_MODE) {
     DisableInspectorRecording();
   }
+}
+
+rule: "If should show current state, display it"
+Event.OngoingPlayer
+if (DEBUG_MODE)
+if (DEBUG_SHOW_CURRENT_STATE)
+{
+  CreateHudText(
+    VisibleTo: EventPlayer(),
+    Subheader: <"Current State: <0>", ultimateState>,
+    Location: Location.Left,
+    SubheaderColor: Color.White,
+    Reevaluation: HudTextRev.VisibleToAndString,
+    Spectators: Spectators.VisibleNever
+  );
 }
 
 rule: "[wheelVisuals.del] Start chasing rainbowVector"
@@ -83,24 +103,17 @@ if (trueHero != HeroOf())
   trueHero = HeroOf();
 
   # Prevent swapping to a different role
-  if (AllDamageHeroes().Contains(trueHero)) SetAllowedHeroes(EventPlayer(), AllDamageHeroes());
-  else if (AllTankHeroes().Contains(trueHero)) SetAllowedHeroes(EventPlayer(), AllTankHeroes());
-  else if (AllSupportHeroes().Contains(trueHero)) SetAllowedHeroes(EventPlayer(), AllSupportHeroes());
+  if (ENFORCE_ROLE_LOCK) {
+    if (AllDamageHeroes().Contains(trueHero)) SetAllowedHeroes(EventPlayer(), AllDamageHeroes());
+    else if (AllTankHeroes().Contains(trueHero)) SetAllowedHeroes(EventPlayer(), AllTankHeroes());
+    else if (AllSupportHeroes().Contains(trueHero)) SetAllowedHeroes(EventPlayer(), AllSupportHeroes());
+  }
 
   if (HeroOf() == ultimateHero) {
     AllowButton(EventPlayer(), Button.Ultimate);
   } else {
     DisallowButton(EventPlayer(), Button.Ultimate);
   }
-}
-
-rule: "If the player despawns for at least 0.25 seconds, reset their hero availability"
-Event.OngoingPlayer
-if (!HasSpawned())
-{
-  Wait(0.25, WaitBehavior.AbortWhenFalse);
-  StopForcingHero(EventPlayer());
-  ResetHeroAvailability();
 }
 
 playervar Hero[] eligibleHeroSwaps;
@@ -174,6 +187,16 @@ if (!IsMatchComplete())
   DispatchPreparingUltEvent(PreparingUltEvent.STATE_EXIT);
 }
 
+rule: "If the player despawns for at least 0.25 seconds, reset their hero availability"
+Event.OngoingPlayer
+if (SHOULD_RESET_HEROES_ON_DESPAWN)
+if (!HasSpawned())
+{
+  Wait(0.25, WaitBehavior.AbortWhenFalse);
+  StopForcingHero(EventPlayer());
+  ResetHeroAvailability();
+}
+
 playervar Number extendedUltPercentLeft;
 playervar Number ultCastStallDuration;
 playervar Number extendedUltDuration;
@@ -230,12 +253,16 @@ void SetLingerDuration() playervar "[SUB]: Set linger duration"
     case Hero.Bastion:
       extendedUltDuration = 1;
       break;
+    case Hero.Venture:
+      extendedUltDuration = 1;
+      break;
   }
 }
 
 rule: "DEBUG: When player melees, give them 25% ult charge"
 Event.OngoingPlayer
 if (DEBUG_MODE)
+if (DEBUG_MELEE_FOR_ULT_CHARGE)
 if (IsButtonHeld(EventPlayer(), Button.Melee))
 {
   SetUltimateCharge(EventPlayer(), Min(100, UltimateChargePercent(EventPlayer()) + 25));
@@ -243,7 +270,7 @@ if (IsButtonHeld(EventPlayer(), Button.Melee))
 
 globalvar Boolean IsInSlowMotion;
 
-rule: "DEBUG: When player hits reload and crouch, toggle slow motion"
+disabled rule: "DEBUG: When player hits reload and crouch, toggle slow motion"
 Event.OngoingPlayer
 if (DEBUG_MODE)
 if (IsButtonHeld(EventPlayer(), Button.Reload))
@@ -275,7 +302,7 @@ if (IsButtonHeld(EventPlayer(), Button.Crouch))
   StopFacing(EventPlayer());
 }
 
-rule: "DEBUG: Shorten assembling heroes in DEBUG_MODE"
+disabled rule: "DEBUG: Shorten assembling heroes in DEBUG_MODE"
 Event.OngoingGlobal
 if (DEBUG_MODE)
 if (IsAssemblingHeroes())

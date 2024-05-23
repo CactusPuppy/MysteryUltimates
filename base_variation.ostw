@@ -1,4 +1,41 @@
-import "base_settings.lobby";
+settings {
+  main {
+    Mode Name: "Mystery Ultimates"
+    Description: "Your ultimate is completely random! Every use of your ultimate grants you a random hero's ultimate instead."
+  }
+
+  modes {
+    Control {
+      Competitive Rules: On
+      Limit Roles: 1 Tank 2 Offense 2 Support
+    }
+
+    Escort {
+      Competitive Rules: On
+      Limit Roles: 1 Tank 2 Offense 2 Support
+    }
+
+    Flashpoint {
+      Competitive Rules: On
+      Limit Roles: 1 Tank 2 Offense 2 Support
+    }
+
+    Hybrid {
+      Competitive Rules: On
+      Limit Roles: 1 Tank 2 Offense 2 Support
+    }
+
+    Push {
+      Competitive Rules: On
+      Limit Roles: 1 Tank 2 Offense 2 Support
+    }
+  }
+
+  lobby {
+    Max Team 1 Players: 5
+    Max Team 2 Players: 5
+  }
+}
 
 rule: "Global credit HUD"
 {

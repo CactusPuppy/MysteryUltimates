@@ -1,0 +1,145 @@
+settings {
+  main {
+    Mode Name: "Mystery Heroes + Mystery Ultimates"
+    Description: "Mystery Heroes, but your ultimate is also random!"
+  }
+
+  modes {
+    General {
+      Limit Roles: Off
+      Tank Role Passive Health Bonus: Disabled
+    }
+
+    Control {
+      Competitive Rules: On
+    }
+
+    Escort {
+      Competitive Rules: On
+    }
+
+    Flashpoint {
+      Competitive Rules: On
+    }
+
+    Hybrid {
+      Competitive Rules: On
+    }
+
+    Push {
+      Competitive Rules: On
+    }
+  }
+
+  heroes {
+    General {
+      Ultimate Generation: 150%
+    }
+  }
+}
+
+globalvar Boolean RETAIN_ULT_CHARGE = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Retain Ultimate Charge", true);
+
+import "main.ostw";
+rule: "Deactivate resetting of heroes upon despawn"
+if (SHOULD_RESET_HEROES_ON_DESPAWN)
+{
+  SHOULD_RESET_HEROES_ON_DESPAWN = false;
+}
+
+rule: "Global credit HUD"
+{
+  CreateHudText(
+    AllPlayers(),
+    Header: " Code: DH07E ",
+    Subheader: <"<0> Mystery Heroes + Ultimate", IconString(Icon.QuestionMark)>,
+    Text: "By CactusPuppy",
+    Location: Location.Right,
+    SortOrder: -10,
+    HeaderColor: Color.Orange,
+    SubheaderColor: Color.White,
+    TextColor: CustomColor(255, 255, 255, 128),
+    Reevaluation: HudTextRev.VisibleTo,
+    Spectators: Spectators.VisibleAlways
+  );
+  if (DEBUG_MODE) {
+    CreateHudText(
+      AllPlayers(),
+      Subheader: "DEBUG MODE ENABLED",
+      Location: Location.Right,
+      SortOrder: -9,
+      SubheaderColor: rainbow,
+      Reevaluation: HudTextRev.VisibleToAndColor
+    );
+  }
+}
+
+rule: "Skip assembling heroes"
+if (IsAssemblingHeroes())
+{
+  SetMatchTime(0.25);
+}
+
+rule: "In setup, re-roll player heroes"
+Event.OngoingPlayer
+if (IsInSetup() || IsWaitingForPlayers())
+{
+  ChooseNewMainHero();
+}
+
+rule: "If player dies and respawns close to a spawn point, change their hero"
+Event.OnDeath
+{
+  WaitUntil(IsAlive(), 1000000);
+  Wait(0.064);
+  AbortIf(Not(
+    SpawnPoints(TeamOf()).Map((p) => PositionOf(<Player>p)).IsTrueForAny((p) => DistanceBetween(EventPlayer(), p) < 1)
+  ));
+
+  # If player killed themselves, don't change their hero and remove their ult charge
+  if (Attacker() == EventPlayer()) {
+    SetUltimateCharge(EventPlayer(), 0);
+    return;
+  }
+
+  ChooseNewMainHero();
+}
+
+playervar Number ultChargeStore;
+
+void ChooseNewMainHero() playervar "[SUB] Choose a new main hero for the player"
+{
+  Hero[] allowedHeroSwaps = [];
+
+  # If player is a tank, or there's less than 3 players on their team, allow them to swap to a tank
+  if (AllTankHeroes().Contains(EventPlayer().Hero())
+  || AllPlayers(TeamOf()).FilteredArray((p) => AllTankHeroes().Contains(p.Hero())).Length < 3) {
+    allowedHeroSwaps.ModAppend(AllTankHeroes());
+  }
+
+  # If player is a support, or there's less than 3 players on their team, allow them to swap to a support
+  if (AllSupportHeroes().Contains(EventPlayer().Hero())
+  || AllPlayers(TeamOf()).FilteredArray((p) => AllSupportHeroes().Contains(p.Hero())).Length < 3) {
+    allowedHeroSwaps.ModAppend(AllSupportHeroes());
+  }
+
+  # If player is a damage, or there's less than 3 players on their team, allow them to swap to a damage
+  if (AllDamageHeroes().Contains(EventPlayer().Hero())
+  || AllPlayers(TeamOf()).FilteredArray((p) => AllDamageHeroes().Contains(p.Hero())).Length < 3) {
+    allowedHeroSwaps.ModAppend(AllDamageHeroes());
+  }
+
+  # Don't let the player swap to the same hero they were playing
+  allowedHeroSwaps.ModRemoveByValue(EventPlayer().Hero());
+
+  Hero newHero = allowedHeroSwaps.Random();
+  ultChargeStore = UltimateChargePercent(EventPlayer());
+  ForcePlayerHero(EventPlayer(), newHero);
+  async RestoreUltCharge();
+}
+
+void RestoreUltCharge() playervar "[SUB] Restore ultimate charge"
+{
+  WaitUntil(UltimateChargePercent() > 0 || ultChargeStore == 0, 1000000);
+  SetUltimateCharge(EventPlayer(), ultChargeStore);
+}
