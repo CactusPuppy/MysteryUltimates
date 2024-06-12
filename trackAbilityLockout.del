@@ -9,7 +9,10 @@ Event.OngoingPlayer
 if (HasStatus(EventPlayer(), Status.Hacked))
 {
   StopChasingVariable(hackAbilityLockout);
-  EventPlayer().hackAbilityLockout = HACK_ABILITY_LOCKOUT_DURATION;
+  # Ensure that we don't overwrite the EMP lockout duration
+  if (hackAbilityLockout < HACK_ABILITY_LOCKOUT_DURATION) {
+    EventPlayer().hackAbilityLockout = HACK_ABILITY_LOCKOUT_DURATION;
+  }
   ChaseVariableAtRate(hackAbilityLockout, 0, 1, RateChaseReevaluation.None);
 
   # Handle cleansing
