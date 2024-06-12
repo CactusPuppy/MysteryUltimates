@@ -58,11 +58,7 @@ void DispatchPreparingUltEvent(in PreparingUltEvent event) {
 
 void UltimateEventHandler() playervar "[stateMachine.del] Dispatch event to handler based on ultimateState"
 {
-  if (DEBUG_LOG_EVENTS) {
-    if (!DEBUG_MODE) EnableInspectorRecording();
-    LogToInspector($"[{EventPlayer()}] Handling overall ult state event {ultimateEvent} in state {ultimateState}");
-    if (!DEBUG_MODE) DisableInspectorRecording();
-  }
+  LogMessage($"[{EventPlayer()}] Handling overall ult state event {ultimateEvent} in state {ultimateState}, on hero {HeroOf()}");
   switch (ultimateState) {
     case UltimateState.NORMAL:
       UltEventHandler_Normal();
@@ -77,12 +73,7 @@ void UltimateEventHandler() playervar "[stateMachine.del] Dispatch event to hand
       UltEventHandler_Lingering();
       break;
   }
-  if (DEBUG_LOG_EVENTS) {
-    if (!DEBUG_MODE) EnableInspectorRecording();
-    LogToInspector($"[{EventPlayer()}] Finished handling overall ult state event {ultimateEvent}; now in state {ultimateState}");
-    if (!DEBUG_MODE) DisableInspectorRecording();
-
-  }
+  LogMessage($"[{EventPlayer()}] Finished handling overall ult state event {ultimateEvent}; now in state {ultimateState}, on hero {HeroOf()}");
 }
 
 
@@ -161,11 +152,7 @@ void UltEventHandler_Lingering() playervar "[stateMachine.del] Handle event for 
 
 void PreparingUltimateEventHandler() playervar "[stateMachine.del] Handle preparing ult event"
 {
-  if (DEBUG_LOG_EVENTS) {
-    if (!DEBUG_MODE) EnableInspectorRecording();
-    LogToInspector($"[{EventPlayer()}] Handling preparing ult state event {preparingUltEvent} in state {preparingUltState}");
-    if (!DEBUG_MODE) DisableInspectorRecording();
-  }
+  LogMessage($"[{EventPlayer()}] Handling preparing ult state event {preparingUltEvent} in state {preparingUltState}, on hero {HeroOf()}");
   switch (preparingUltState) {
     case PreparingUltState.NONE:
       PreparingUltEventHandler_None();
@@ -183,11 +170,7 @@ void PreparingUltimateEventHandler() playervar "[stateMachine.del] Handle prepar
       PreparingUltEventHandler_CastingUlt();
       break;
   }
-  if (DEBUG_LOG_EVENTS) {
-    if (!DEBUG_MODE) EnableInspectorRecording();
-    LogToInspector($"[{EventPlayer()}] Finished handling preparing ult state event {preparingUltEvent}; now in state {preparingUltState}");
-    if (!DEBUG_MODE) DisableInspectorRecording();
-  }
+  LogMessage($"[{EventPlayer()}] Finished handling preparing ult state event {preparingUltEvent}; now in state {preparingUltState}, on hero {HeroOf()}");
 }
 
 void PreparingUltEventHandler_None() playervar "[stateMachine.del] Handle event for NONE state"

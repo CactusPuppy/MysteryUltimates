@@ -140,6 +140,7 @@ void ChooseNewUltimateHero() playervar "[SUB]: Choose a new ultimateHero"
   # If the ultimateHero matches their hero right now, then we can allow native ultimate.
   # Otherwise, we need to disable the ultimate button.
   if (ultimateHero == HeroOf()) {
+    LogMessage($"{EventPlayer()} got native ult ({HeroOf()}). FORCE_NON_NATIVE_ULTIMATE: {FORCE_NON_NATIVE_ULTIMATE}");
     AllowButton(EventPlayer(), Button.Ultimate);
   } else {
     DisallowButton(EventPlayer(), Button.Ultimate);
@@ -318,4 +319,13 @@ if (DEBUG_MODE)
 if (IsCommunicating(EventPlayer(), Communication.Goodbye))
 {
   SetMatchTime(0);
+}
+
+void LogMessage(in String message)
+{
+  if (DEBUG_LOG_EVENTS) {
+    if (!DEBUG_MODE) EnableInspectorRecording();
+    LogToInspector(message);
+    if (!DEBUG_MODE) DisableInspectorRecording();
+  }
 }
