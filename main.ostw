@@ -110,7 +110,8 @@ if (trueHero != HeroOf())
   }
 
   if (HeroOf() == ultimateHero) {
-    AllowButton(EventPlayer(), Button.Ultimate);
+    if (FORCE_NON_NATIVE_ULTIMATE) ChooseNewUltimateHero();
+    else AllowButton(EventPlayer(), Button.Ultimate);
   } else {
     DisallowButton(EventPlayer(), Button.Ultimate);
   }
