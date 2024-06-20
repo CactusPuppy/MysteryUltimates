@@ -46,7 +46,7 @@ rule: "Global credit HUD"
   CreateHudText(
     AllPlayers(),
     Header: " Code: DH07E ",
-    Subheader: <"<0> Mystery Heroes + Ultimate", IconString(Icon.QuestionMark)>,
+    Subheader: <"<0> Mys. Heroes + Mys. Ultimate", IconString(Icon.QuestionMark)>,
     Text: "By CactusPuppy",
     Location: Location.Right,
     SortOrder: -10,
