@@ -30,12 +30,6 @@ settings {
       Competitive Rules: On
     }
   }
-
-  heroes {
-    General {
-      Ultimate Generation: 150%
-    }
-  }
 }
 
 globalvar Boolean RETAIN_ULT_CHARGE = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Retain Ultimate Charge", true);
