@@ -136,5 +136,5 @@ void ChooseNewMainHero() playervar "[SUB] Choose a new main hero for the player"
 void RestoreUltCharge() playervar "[SUB] Restore ultimate charge"
 {
   WaitUntil(UltimateChargePercent() > 0 || ultChargeStore == 0, 1000000);
-  SetUltimateCharge(EventPlayer(), ultChargeStore);
+  SetUltimateCharge(EventPlayer(), RETAIN_ULT_CHARGE ? ultChargeStore : Min(ultChargeStore, 15));
 }
