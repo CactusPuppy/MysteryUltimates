@@ -258,6 +258,12 @@ void SetLingerDuration() playervar "[SUB]: Set linger duration"
     case Hero.Venture:
       extendedUltDuration = 1;
       break;
+    case Hero.Hazard:
+      extendedUltDuration = 4;
+      break;
+    case Hero.Freja:
+      extendedUltDuration = 3;
+      break;
   }
 }
 
