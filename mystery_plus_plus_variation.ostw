@@ -1,36 +1,37 @@
-settings {
-  main {
-    Mode Name: "Mystery Heroes + Mystery Ultimates"
-    Description: "Mystery Heroes, but your ultimate is also random!"
-  }
+// settings {
+//   main {
+//     Mode Name: "Mystery Heroes + Mystery Ultimates"
+//     Description: "Mystery Heroes, but your ultimate is also random!"
+//   }
 
-  modes {
-    General {
-      Limit Roles: Off
-      Tank Role Passive Health Bonus: Disabled
-    }
+//   modes {
+//     General {
+//       Limit Roles: Off
+//       Tank Role Passive Health Bonus: Disabled
+//       Respawn as Random Hero: Enabled
+//     }
 
-    Control {
-      Competitive Rules: On
-    }
+//     Control {
+//       Competitive Rules: On
+//     }
 
-    Escort {
-      Competitive Rules: On
-    }
+//     Escort {
+//       Competitive Rules: On
+//     }
 
-    Flashpoint {
-      Competitive Rules: On
-    }
+//     Flashpoint {
+//       Competitive Rules: On
+//     }
 
-    Hybrid {
-      Competitive Rules: On
-    }
+//     Hybrid {
+//       Competitive Rules: On
+//     }
 
-    Push {
-      Competitive Rules: On
-    }
-  }
-}
+//     Push {
+//       Competitive Rules: On
+//     }
+//   }
+// }
 
 globalvar Boolean RETAIN_ULT_CHARGE = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Retain Ultimate Charge", true);
 

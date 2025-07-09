@@ -1,41 +1,41 @@
-settings {
-  main {
-    Mode Name: "Mystery Ultimates Dominoes"
-    Description: "Every time you use your ult, you get a random ult! On top of that, any player that uses their ult triggers a domino effect, causing all other players to use their ults as well!"
-  }
+// settings {
+//   main {
+//     Mode Name: "Mystery Ultimates Dominoes"
+//     Description: "Every time you use your ult, you get a random ult! On top of that, any player that uses their ult triggers a domino effect, causing all other players to use their ults as well!"
+//   }
 
-  modes {
-    Control {
-      Competitive Rules: On
-      Limit Roles: 1 Tank 2 Offense 2 Support
-    }
+//   modes {
+//     Control {
+//       Competitive Rules: On
+//       Limit Roles: 1 Tank 2 Offense 2 Support
+//     }
 
-    Escort {
-      Competitive Rules: On
-      Limit Roles: 1 Tank 2 Offense 2 Support
-    }
+//     Escort {
+//       Competitive Rules: On
+//       Limit Roles: 1 Tank 2 Offense 2 Support
+//     }
 
-    Flashpoint {
-      Competitive Rules: On
-      Limit Roles: 1 Tank 2 Offense 2 Support
-    }
+//     Flashpoint {
+//       Competitive Rules: On
+//       Limit Roles: 1 Tank 2 Offense 2 Support
+//     }
 
-    Hybrid {
-      Competitive Rules: On
-      Limit Roles: 1 Tank 2 Offense 2 Support
-    }
+//     Hybrid {
+//       Competitive Rules: On
+//       Limit Roles: 1 Tank 2 Offense 2 Support
+//     }
 
-    Push {
-      Competitive Rules: On
-      Limit Roles: 1 Tank 2 Offense 2 Support
-    }
-  }
+//     Push {
+//       Competitive Rules: On
+//       Limit Roles: 1 Tank 2 Offense 2 Support
+//     }
+//   }
 
-  lobby {
-    Max Team 1 Players: 5
-    Max Team 2 Players: 5
-  }
-}
+//   lobby {
+//     Max Team 1 Players: 5
+//     Max Team 2 Players: 5
+//   }
+// }
 
 import "main.ostw";
 
