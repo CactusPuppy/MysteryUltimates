@@ -39,6 +39,7 @@ rule: "Deactivate resetting of heroes upon despawn"
 if (SHOULD_RESET_HEROES_ON_DESPAWN)
 {
   SHOULD_RESET_HEROES_ON_DESPAWN = false;
+  SHOULD_HERO_STOP_BEING_FORCED = false;
 }
 
 rule: "Global credit HUD"
@@ -66,6 +67,14 @@ rule: "Global credit HUD"
       Reevaluation: HudTextRev.VisibleToAndColor
     );
   }
+}
+
+rule: "Select new hero after waiting for players"
+Event.OngoingPlayer
+if (IsWaitingForPlayers())
+{
+  WaitUntil(!IsWaitingForPlayers(), 1000000);
+  ChooseNewMainHero();
 }
 
 rule: "Skip assembling heroes"
@@ -126,10 +135,10 @@ void ChooseNewMainHero() playervar "[SUB] Choose a new main hero for the player"
   # Don't let the player swap to the same hero they were playing
   allowedHeroSwaps.ModRemoveByValue(EventPlayer().Hero());
 
-  Hero newHero = allowedHeroSwaps.Random();
+  trueHero = allowedHeroSwaps.Random();
   if (HeroOf() == Hero.Dva) WaitUntil(UltimateChargePercent() > 0, 0.25);
   ultChargeStore = UltimateChargePercent(EventPlayer());
-  ForcePlayerHero(EventPlayer(), newHero);
+  ForcePlayerHero(EventPlayer(), trueHero);
   async RestoreUltCharge();
 }
 

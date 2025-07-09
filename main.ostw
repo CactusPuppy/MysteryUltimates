@@ -97,6 +97,8 @@ if (SHOW_ULTIMATE_HERO)
 rule: "Track player's true hero"
 Event.OngoingPlayer
 if (HasSpawned())
+# For some reason, in respawn as random hero, HeroOf can sometimes return "Unknown Value"
+if (HeroOf() == true)
 if (ultimateState == UltimateState.NORMAL)
 if (trueHero != HeroOf())
 {
@@ -189,13 +191,15 @@ if (!IsMatchComplete())
   DispatchPreparingUltEvent(PreparingUltEvent.STATE_EXIT);
 }
 
+globalvar Boolean SHOULD_HERO_STOP_BEING_FORCED = true;
+
 rule: "If the player despawns for at least 0.25 seconds, reset their hero availability"
 Event.OngoingPlayer
 if (SHOULD_RESET_HEROES_ON_DESPAWN)
 if (!HasSpawned())
 {
   Wait(0.25, WaitBehavior.AbortWhenFalse);
-  StopForcingHero(EventPlayer());
+  if (SHOULD_HERO_STOP_BEING_FORCED) StopForcingHero(EventPlayer());
   ResetHeroAvailability();
 }
 
