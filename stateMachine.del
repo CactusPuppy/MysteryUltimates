@@ -389,8 +389,20 @@ if (ultimateState == UltimateState.PREPARING_ULT)
 if (placeableUltimateHeroes.Contains(HeroOf()))
 if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
 {
+  AbortIf(IsUsingUltimate(EventPlayer()));
   Wait(0.25);
   PressButton(EventPlayer(), Button.Ultimate);
+}
+
+rule: "If Wuyang presses their ult button while in the preparing ult state, bring ult back"
+Event.OngoingPlayer
+if (IsButtonHeld(EventPlayer(), Button.Ultimate))
+{
+  AbortIf(HeroOf() != Hero.Wuyang || ultimateState != UltimateState.PREPARING_ULT);
+  Wait(0.25);
+  PressButton(EventPlayer(), Button.Ultimate);
+  # Prevent retriggering this rule
+  MinWait();
 }
 
 rule: "While attempting to cast ult, if player has a placeable ult and they get hard CC'd, bring it back up when they are no longer afflicted"

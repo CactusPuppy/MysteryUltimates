@@ -21,7 +21,7 @@ globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero(" DEBUG", "Ultimate H
 globalvar Boolean DEBUG_LOG_EVENTS = WorkshopSettingToggle(" DEBUG", "Log Events to Inspector (*doesn't need debug mode on)", false, 3);
 globalvar Boolean DEBUG_SHOW_CURRENT_STATE = WorkshopSettingToggle(" DEBUG", "Show Current State", false, 4);
 
-globalvar Hero[] placeableUltimateHeroes = [Hero.Baptiste, Hero.Symmetra, Hero.Lifeweaver];
+globalvar Hero[] placeableUltimateHeroes = [Hero.Baptiste, Hero.Symmetra, Hero.Lifeweaver, Hero.Wuyang];
 globalvar Hero[] ability1AllowedHeroes = [Hero.Dva, Hero.Echo];
 globalvar Hero[] ability2AllowedHeroes = [];
 
@@ -97,7 +97,7 @@ if (SHOW_ULTIMATE_HERO)
 rule: "Track player's true hero"
 Event.OngoingPlayer
 if (HasSpawned())
-# For some reason, in respawn as random hero, HeroOf can sometimes return "Unknown Value"
+# For some reason, in respawn as random hero, HeroOf can sometimes return 'Unknown Value'
 if (HeroOf() == true)
 if (ultimateState == UltimateState.NORMAL)
 if (trueHero != HeroOf())
