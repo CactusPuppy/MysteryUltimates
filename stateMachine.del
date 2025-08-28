@@ -313,13 +313,31 @@ if (IsAbilitiesLocked() == false)
   DispatchUltimateEvent(UltimateEvent.ULT_ACTIVATION);
 }
 
+playervar Any ultimateHeroIcon;
 rule: "When the player is in the preparing ult state and they swap off their true hero, issue a hero swap event"
 Event.OngoingPlayer
 if (ultimateState == UltimateState.PREPARING_ULT)
 if (preparingUltState == PreparingUltState.SWITCHING_HEROES)
 if (HeroOf() != trueHero)
 {
+  if (ultimateHeroIcon) DestroyInWorldText(ultimateHeroIcon);
   DispatchPreparingUltEvent(PreparingUltEvent.HERO_SWAPPED);
+  Wait(0.25, WaitBehavior.RestartWhenTrue);
+  SmallMessage(EventPlayer(), <"   Ultimate: <0>", HeroIconString(HeroOf())>);
+  BigMessage(EventPlayer(), <"Ultimate:  <0>", HeroIconString(HeroOf())>);
+  ultimateHeroIcon = CreateInWorldText(
+    VisibleTo: AllPlayers().Remove(EventPlayer()),
+    Header: HeroIconString(HeroOf()),
+    Position: UpdateEveryFrame(PositionOf() + Up()),
+    Scale: 2,
+    Clipping: Clipping.ClipAgainstSurfaces,
+    Reevaluation: InworldTextRev.VisibleToPositionAndString,
+    TextColor: Color.White,
+    Spectators: Spectators.VisibleAlways
+  );
+  WaitUntil(ultimateState == UltimateState.DEAD || ultimateState == UltimateState.NORMAL, HeroOf() == Hero.Doomfist ? 0.5 : 1.5);
+  DestroyInWorldText(ultimateHeroIcon);
+  ultimateHeroIcon = false;
 }
 
 rule: "When player is stalling ult cast, wait for the duration then issue a stall expired event"
