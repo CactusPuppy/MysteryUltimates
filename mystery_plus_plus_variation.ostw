@@ -37,6 +37,8 @@ globalvar Boolean RETAIN_ULT_CHARGE = WorkshopSettingToggle("Mystery Heroes + Ul
 globalvar Boolean FORCE_MYSTERY_HERO = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Force Mystery Hero on Spawn", false, 1);
 globalvar Hero MYSTERY_HERO_TO_FORCE = WorkshopSettingHero("Mystery Heroes + Ultimate", "Hero to Force", Hero.Echo, 2);
 
+playervar Boolean HasForcedBefore;
+
 import "main.ostw";
 rule: "Deactivate resetting of heroes upon despawn"
 if (SHOULD_RESET_HEROES_ON_DESPAWN)
@@ -141,8 +143,9 @@ void ChooseNewMainHero() playervar "[SUB] Choose a new main hero for the player"
   trueHero = allowedHeroSwaps.Random();
   if (HeroOf() == Hero.Dva) WaitUntil(UltimateChargePercent() > 0, 0.25);
   ultChargeStore = UltimateChargePercent(EventPlayer());
-  if (DEBUG_MODE && FORCE_MYSTERY_HERO) {
+  if (DEBUG_MODE && FORCE_MYSTERY_HERO && !HasForcedBefore) {
     trueHero = MYSTERY_HERO_TO_FORCE;
+    HasForcedBefore = true;
   }
   ForcePlayerHero(EventPlayer(), trueHero);
   async RestoreUltCharge();
