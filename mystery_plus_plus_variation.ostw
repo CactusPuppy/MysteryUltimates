@@ -40,11 +40,10 @@ globalvar Hero MYSTERY_HERO_TO_FORCE = WorkshopSettingHero("Mystery Heroes + Ult
 playervar Boolean HasForcedBefore;
 
 import "main.ostw";
-rule: "Deactivate resetting of heroes upon despawn"
-if (SHOULD_RESET_HEROES_ON_DESPAWN)
+rule: "Set variation - Mystery Heroes + Mystery Ultimates"
+if (ACTIVE_VARIATION == MUVariation.CLASSIC)
 {
-  SHOULD_RESET_HEROES_ON_DESPAWN = false;
-  SHOULD_HERO_STOP_BEING_FORCED = false;
+  ACTIVE_VARIATION = MUVariation.MYSTERY_EVERYTHING;
 }
 
 rule: "Global credit HUD"

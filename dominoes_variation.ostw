@@ -50,6 +50,12 @@ playervar Number dominoesCooldown;
 playervar Boolean triggerDomino;
 playervar Number dominoesDelay;
 
+rule: "Set variation - Dominaoes"
+if (ACTIVE_VARIATION == MUVariation.CLASSIC)
+{
+  ACTIVE_VARIATION = MUVariation.DOMINOES;
+}
+
 rule: "Global credit HUD"
 {
   CreateHudText(

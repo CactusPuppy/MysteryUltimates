@@ -8,7 +8,14 @@ import "stateMachine.del";
 playervar Hero trueHero;
 playervar Hero ultimateHero;
 
-globalvar Boolean SHOULD_RESET_HEROES_ON_DESPAWN = true;
+enum MUVariation {
+  CLASSIC = "Classic",
+  DOMINOES = "Dominoes",
+  MYSTERY_EVERYTHING = "Mystery Everything"
+}
+
+globalvar MUVariation ACTIVE_VARIATION = MUVariation.CLASSIC;
+
 globalvar Boolean FORCE_NON_NATIVE_ULTIMATE = WorkshopSettingToggle("Mystery Ultimates", "Force Random Ultimate To Be Non-Native", true, 0);
 globalvar Boolean RANDOM_ULTIMATE_MATCHES_ROLE = WorkshopSettingToggle("Mystery Ultimates", "Force Random Ultimate To Match Role", false, 1);
 globalvar Boolean SHOW_ULTIMATE_HERO = WorkshopSettingToggle("Mystery Ultimates", "Show Randomized Ultimate Hero", false, 3);
@@ -191,15 +198,14 @@ if (!IsMatchComplete())
   DispatchPreparingUltEvent(PreparingUltEvent.STATE_EXIT);
 }
 
-globalvar Boolean SHOULD_HERO_STOP_BEING_FORCED = true;
 
 rule: "If the player despawns for at least 0.25 seconds, reset their hero availability"
 Event.OngoingPlayer
-if (SHOULD_RESET_HEROES_ON_DESPAWN)
+if (ACTIVE_VARIATION != MUVariation.MYSTERY_EVERYTHING)
 if (!HasSpawned())
 {
   Wait(0.25, WaitBehavior.AbortWhenFalse);
-  if (SHOULD_HERO_STOP_BEING_FORCED) StopForcingHero(EventPlayer());
+  StopForcingHero(EventPlayer());
   ResetHeroAvailability();
 }
 

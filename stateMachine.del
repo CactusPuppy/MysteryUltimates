@@ -285,7 +285,7 @@ void RestoreTrueHeroAndReturnToNormal() playervar "[stateMachine.del] Restore th
 
   SetUltimateCharge(EventPlayer(), 0);
   async! OverwriteHeroSwapUltTransfer();
-  if (SHOULD_HERO_STOP_BEING_FORCED) StopForcingHero(EventPlayer());
+  if (ACTIVE_VARIATION != MUVariation.MYSTERY_EVERYTHING) StopForcingHero(EventPlayer());
   awaitingReturnPlayers.ModRemoveByValue(EventPlayer());
   ProcessNewPriorityList();
   ultimateState = UltimateState.NORMAL;
