@@ -34,7 +34,7 @@
 // }
 import "../OSTWUtils/UltimateChargeConversion.del";
 globalvar Boolean RETAIN_ULT_CHARGE = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Retain Ultimate Charge", true);
-globalvar Boolean FORCE_MYSTERY_HERO = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Force Mystery Hero on Spawn", false, 1);
+globalvar Boolean INITIAL_MYSTERY_HERO = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Force Initial Mystery Hero", false, 1);
 globalvar Hero MYSTERY_HERO_TO_FORCE = WorkshopSettingHero("Mystery Heroes + Ultimate", "Hero to Force", Hero.Echo, 2);
 
 playervar Boolean HasForcedBefore;
@@ -142,7 +142,7 @@ void ChooseNewMainHero() playervar "[SUB] Choose a new main hero for the player"
   trueHero = allowedHeroSwaps.Random();
   if (HeroOf() == Hero.Dva) WaitUntil(UltimateChargePercent() > 0, 0.25);
   ultChargeStore = UltimateChargeConversion.UltimatePoints(HeroOf(EventPlayer()), UltimateChargePercent(EventPlayer()));
-  if (DEBUG_MODE && FORCE_MYSTERY_HERO && !HasForcedBefore) {
+  if (DEBUG_MODE && INITIAL_MYSTERY_HERO && !HasForcedBefore) {
     trueHero = MYSTERY_HERO_TO_FORCE;
     HasForcedBefore = true;
   }
