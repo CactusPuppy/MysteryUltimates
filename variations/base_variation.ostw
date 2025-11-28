@@ -64,4 +64,4 @@ rule: "Global credit HUD"
   }
 }
 
-import "main.ostw";
+import "../main.ostw";

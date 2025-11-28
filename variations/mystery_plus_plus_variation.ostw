@@ -32,14 +32,14 @@
 //     }
 //   }
 // }
-import "OSTWUtils/UltimateChargeConversion.del";
+import "../OSTWUtils/UltimateChargeConversion.del";
 globalvar Boolean RETAIN_ULT_CHARGE = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Retain Ultimate Charge", true);
 globalvar Boolean FORCE_MYSTERY_HERO = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Force Mystery Hero on Spawn", false, 1);
 globalvar Hero MYSTERY_HERO_TO_FORCE = WorkshopSettingHero("Mystery Heroes + Ultimate", "Hero to Force", Hero.Echo, 2);
 
 playervar Boolean HasForcedBefore;
 
-import "main.ostw";
+import "../main.ostw";
 rule: "Set variation - Mystery Heroes + Mystery Ultimates"
 if (ACTIVE_VARIATION == MUVariation.CLASSIC)
 {
