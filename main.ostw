@@ -11,7 +11,8 @@ playervar Hero ultimateHero;
 enum MUVariation {
   CLASSIC = "Classic",
   DOMINOES = "Dominoes",
-  MYSTERY_EVERYTHING = "Mystery Everything"
+  MYSTERY_EVERYTHING = "Mystery Everything",
+  SPIRIT_SHOWDOWN = "Spirit Showdown"
 }
 
 globalvar MUVariation ACTIVE_VARIATION = MUVariation.CLASSIC;
@@ -21,12 +22,13 @@ globalvar Boolean RANDOM_ULTIMATE_MATCHES_ROLE = WorkshopSettingToggle("Mystery 
 globalvar Boolean SHOW_ULTIMATE_HERO = WorkshopSettingToggle("Mystery Ultimates", "Show Randomized Ultimate Hero", false, 3);
 globalvar Boolean ENFORCE_ROLE_LOCK = WorkshopSettingToggle("Mystery Ultimates", "Enforce Role Lock", true, 4);
 
-globalvar Boolean DEBUG_MODE = WorkshopSettingToggle(" DEBUG", "Debug Mode Enabled", false, -1);
-globalvar Boolean DEBUG_MELEE_FOR_ULT_CHARGE = WorkshopSettingToggle(" DEBUG", "Melee for 25% Ult Charge", false, 0);
-globalvar Boolean DEBUG_SHOULD_FORCE_ULTIMATE_HERO = WorkshopSettingToggle(" DEBUG", "Force Ultimate Hero", false, 1);
-globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero(" DEBUG", "Ultimate Hero to Force", Hero.Ana, 2);
-globalvar Boolean DEBUG_LOG_EVENTS = WorkshopSettingToggle(" DEBUG", "Log Events to Inspector (*doesn't need debug mode on)", false, 3);
-globalvar Boolean DEBUG_SHOW_CURRENT_STATE = WorkshopSettingToggle(" DEBUG", "Show Current State", false, 4);
+String DEBUG_SETTING_CATEGORY: " DEBUG";
+globalvar Boolean DEBUG_MODE = WorkshopSettingToggle(DEBUG_SETTING_CATEGORY, "Debug Mode Enabled", false, -1);
+globalvar Boolean DEBUG_MELEE_FOR_ULT_CHARGE = WorkshopSettingToggle(DEBUG_SETTING_CATEGORY, "Melee for 25% Ult Charge", false, 0);
+globalvar Boolean DEBUG_SHOULD_FORCE_ULTIMATE_HERO = WorkshopSettingToggle(DEBUG_SETTING_CATEGORY, "Force Ultimate Hero", false, 1);
+globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero(DEBUG_SETTING_CATEGORY, "Ultimate Hero to Force", Hero.Ana, 2);
+globalvar Boolean DEBUG_LOG_EVENTS = WorkshopSettingToggle(DEBUG_SETTING_CATEGORY, "Log Events to Inspector (*doesn't need debug mode on)", false, 3);
+globalvar Boolean DEBUG_SHOW_CURRENT_STATE = WorkshopSettingToggle(DEBUG_SETTING_CATEGORY, "Show Current State", false, 4);
 
 globalvar Hero[] placeableUltimateHeroes = [Hero.Baptiste, Hero.Symmetra, Hero.Lifeweaver, Hero.Wuyang];
 globalvar Hero[] ability1AllowedHeroes = [Hero.Dva, Hero.Echo];
@@ -226,7 +228,8 @@ Number flashWeight(Player p = EventPlayer()): Min(1, Max(0, (p.extendedUltPercen
 Number flashFactor(Player p = EventPlayer()): blinkFactor(p.extendedUltDuration, p.extendedUltPercentLeft);
 Number blinkFactor(Number duration, Number t, Number frequency = 3): SineFromRadians(SquareRoot(duration * t * (frequency * Math.PI * 2))) / 2 + 0.5;
 
-Boolean IsAbilitiesLocked(Player p = EventPlayer()): [IsHackAbilityLockoutActive(p), HasStatus(p, Status.Asleep), HasStatus(p, Status.Frozen), HasStatus(p, Status.KnockedDown), HasStatus(p, Status.Stunned)].IsTrueForAny((status) => status);
+playervar Boolean AreButtonsLocked;
+Boolean IsAbilitiesLocked(Player p = EventPlayer()): [IsHackAbilityLockoutActive(p), HasStatus(p, Status.Asleep), HasStatus(p, Status.Frozen), HasStatus(p, Status.KnockedDown), HasStatus(p, Status.Stunned), AreButtonsLocked].IsTrueForAny((status) => status);
 
 void SetStallDuration() playervar "[SUB]: Set cast stall duration"
 {

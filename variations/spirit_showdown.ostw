@@ -1,0 +1,221 @@
+import "../main.ostw";
+import "../OSTWUtils/UltimateChargeConversion.del";
+
+String SPIRIT_SHOWDOWN_SETTINGS_CATEGORY: "Spirit Showdown Settings";
+String TEST: DEBUG_SETTING_CATEGORY;
+globalvar Boolean RETAIN_ULT_CHARGE = WorkshopSettingToggle(SPIRIT_SHOWDOWN_SETTINGS_CATEGORY, "Retain Ultimate Charge Between Heroes", true, 2);
+globalvar Boolean FORCE_INITIAL_HERO = WorkshopSettingToggle(DEBUG_SETTING_CATEGORY, "Showdown - Force Initial Hero Selection", false, 100);
+globalvar Boolean MYSTERY_HERO_TO_FORCE = WorkshopSettingHero(" DEBUG", "Showdown - Initial Hero to Force", Hero.Echo, 101);
+globalvar Number KILLS_TO_SWITCH_HERO = WorkshopSettingInteger(SPIRIT_SHOWDOWN_SETTINGS_CATEGORY, "Kills to Switch Hero", 1, 1, 10, 0);
+globalvar Number DEATHS_TO_SWITCH_HERO = WorkshopSettingInteger(SPIRIT_SHOWDOWN_SETTINGS_CATEGORY, "Deaths to Switch Hero", 2, 1, 10, 1);
+globalvar Boolean SUICIDES_COUNT_TOWARDS_DEATHS = WorkshopSettingToggle(SPIRIT_SHOWDOWN_SETTINGS_CATEGORY, "Suicides Count Towards Deaths", true, 3);
+globalvar Boolean REZZED_DEATHS_DONT_COUNT = WorkshopSettingToggle(SPIRIT_SHOWDOWN_SETTINGS_CATEGORY, "Resurrections Undo Deaths", false, 4);
+globalvar Hero[] TankHeroOrder = AllTankHeroes().Randomize();
+globalvar Hero[] DamageHeroOrder = AllDamageHeroes().Randomize();
+globalvar Hero[] SupportHeroOrder = AllSupportHeroes().Randomize();
+
+playervar Hero[] AvailableHeroes;
+playervar Number HeroIndex;
+playervar Boolean HasForcedBefore;
+
+
+enum HeroRole
+{
+  Tank,
+  Damage,
+  Support
+}
+
+HeroRole GetHeroRole(Player p = EventPlayer()): SlotOf(p) == 0
+  ? HeroRole.Tank
+  : SlotOf(p) < 3
+    ? HeroRole.Damage
+    : HeroRole.Support;
+
+Hero[] GetRoleHeroOrder(Player p = EventPlayer()): GetHeroRole(p) == HeroRole.Tank
+  ? TankHeroOrder
+  : GetHeroRole(p) == HeroRole.Damage
+    ? DamageHeroOrder
+    : SupportHeroOrder;
+
+Number NextHeroIndex(Player p = EventPlayer()): (HeroIndex + 1) % CountOf(AvailableHeroes);
+
+rule: "Set variation - Spirit Showdown"
+if (ACTIVE_VARIATION == MUVariation.CLASSIC)
+{
+  ACTIVE_VARIATION = MUVariation.SPIRIT_SHOWDOWN;
+}
+
+rule: "Global credit HUD"
+{
+  CreateHudText(
+    VisibleTo: AllPlayers(),
+    Header: " Code: ????? ",
+    Subheader: <"<0> Mystery Ultimate Showdown", IconString(Icon.QuestionMark)>,
+    Text: "By CactusPuppy",
+    Location: Location.Right,
+    SortOrder: -10,
+    HeaderColor: Color.Orange,
+    SubheaderColor: Color.White,
+    TextColor: CustomColor(255, 255, 255, 128),
+    Reevaluation: HudTextRev.VisibleTo,
+    Spectators: Spectators.VisibleAlways
+  );
+  if (DEBUG_MODE) {
+    CreateHudText(
+      AllPlayers(),
+      Subheader: "DEBUG MODE ENABLED",
+      Location: Location.Right,
+      SortOrder: -9,
+      SubheaderColor: rainbow,
+      Reevaluation: HudTextRev.VisibleToAndColor
+    );
+  }
+}
+
+rule: "Initialize player hero index"
+Event.OnPlayerJoin
+{
+  InitializePlayerHeroIndex();
+}
+
+
+
+void InitializePlayerHeroIndex() playervar "[SUBROUTINE] Initialize player hero index"
+{
+  LogToInspector(<"Assigning hero index for <0>", EventPlayer()>);
+  AvailableHeroes = GetRoleHeroOrder();
+  Any temp = AllPlayers().Remove(EventPlayer()).Filter(p => GetHeroRole(p) == GetHeroRole(EventPlayer()));
+  LogToInspector(<"Players on same role: <0>", temp>);
+  temp = AllPlayers().Remove(EventPlayer()).Filter(p => GetHeroRole(p) == GetHeroRole(EventPlayer())).Map(p => p.HeroIndex);
+  LogToInspector(<"Taken hero indices: <0>", temp>);
+  HeroIndex = AvailableHeroes
+    .Map((_, i2) => i2)
+    .Remove(temp)
+    .Random();
+}
+
+rule: "Skip assembling heroes"
+if (IsAssemblingHeroes())
+{
+  SetMatchTime(0.25);
+}
+
+rule: "Select new hero after waiting for players"
+Event.OngoingPlayer
+if (IsWaitingForPlayers())
+{
+  WaitUntil(!IsWaitingForPlayers(), 1000000);
+  InitializePlayerHeroIndex();
+}
+
+
+void DisallowButtons()
+{
+  AreButtonsLocked = true;
+  DisallowButton(EventPlayer(), Button.PrimaryFire);
+  DisallowButton(EventPlayer(), Button.SecondaryFire);
+  DisallowButton(EventPlayer(), Button.Ability1);
+  DisallowButton(EventPlayer(), Button.Ability2);
+  DisallowButton(EventPlayer(), Button.Interact);
+  DisallowButton(EventPlayer(), Button.Jump);
+  DisallowButton(EventPlayer(), Button.Crouch);
+  // SetPrimaryFireEnabled(EventPlayer(), false);
+  // SetSecondaryFireEnabled(EventPlayer(), false);
+}
+
+void DisallowThenGraduallyReallowButtons() playervar "[SUBROUTINE] Disallow buttons, then gradually reallow them"
+{
+  DisallowButtons();
+  # Conditions system needs one tick of high to register falling edge
+  MinWait();
+  AreButtonsLocked = false;
+  // Gradual reallow handled below
+}
+
+rule: "Gradually reallow buttons when AreButtonsLocked falling edge"
+Event.OngoingPlayer
+if (AreButtonsLocked == true)
+{
+  # Wait for falling edge
+  WaitUntil(!AreButtonsLocked, 999999);
+  # Allow buttons gradually, aborting restoration if AreButtonsLocked goes high again
+  WaitUntil(AreButtonsLocked, 0.25);
+  AbortIf(AreButtonsLocked);
+  AllowButton(EventPlayer(), Button.Crouch);
+  WaitUntil(AreButtonsLocked, 0.25);
+  AbortIf(AreButtonsLocked);
+  AllowButton(EventPlayer(), Button.Jump);
+  WaitUntil(AreButtonsLocked, 0.5);
+  AbortIf(AreButtonsLocked);
+  AllowButton(EventPlayer(), Button.PrimaryFire);
+  SetPrimaryFireEnabled(EventPlayer(), true);
+  AllowButton(EventPlayer(), Button.SecondaryFire);
+  SetSecondaryFireEnabled(EventPlayer(), true);
+  AllowButton(EventPlayer(), Button.Ability1);
+  AllowButton(EventPlayer(), Button.Ability2);
+  AllowButton(EventPlayer(), Button.Interact);
+
+}
+
+playervar Number previousUltPoints;
+playervar Any HeroChangeVFX;
+void ChangeHeroAndPreloadNext() playervar "[SUBROUTINE] Change player's hero to their current hero index and preload the next hero"
+{
+  killProgress = 0;
+  deathProgress = 0;
+  previousUltPoints = UltimateChargeConversion.UltimatePoints(HeroOf(EventPlayer()), UltimateChargePercent(EventPlayer()));
+  Wait(0.1, WaitBehavior.IgnoreCondition);
+  HeroIndex = NextHeroIndex();
+  trueHero = AvailableHeroes[HeroIndex];
+  WaitUntil(IsAlive(EventPlayer()), 999999);
+  ForcePlayerHero(EventPlayer(), trueHero);
+  DisallowThenGraduallyReallowButtons();
+  SetStatus(EventPlayer(), null, Status.PhasedOut, 1);
+  PreloadHero(EventPlayer(), AvailableHeroes[NextHeroIndex()]);
+  MinWait();
+  HeroChangeVFX = CreateEffect(AllPlayers(), Effect.EchoCloningEffect, TeamOf(EventPlayer()), EventPlayer(), 1, EffectRev.VisibleToPositionAndRadius);
+  Wait(0.25 - 0.016, WaitBehavior.IgnoreCondition);
+  SetUltimateCharge(
+    EventPlayer(),
+    UltimateChargeConversion.ChargePercentFromPoints(HeroOf(EventPlayer()), previousUltPoints)
+  );
+  Wait(0.75, WaitBehavior.IgnoreCondition);
+  DestroyEffect(HeroChangeVFX);
+}
+
+rule: "Force player to spawn as assigned hero"
+Event.OngoingPlayer
+if (!HasSpawned())
+if (!IsAssemblingHeroes())
+{
+  ChangeHeroAndPreloadNext();
+}
+
+playervar Number killProgress;
+playervar Number deathProgress;
+rule: "When player earns a final blow, increment their hero index and change their hero"
+Event.OnFinalBlow
+{
+  killProgress += 1;
+  if (killProgress >= KILLS_TO_SWITCH_HERO)
+    DispatchUltimateEvent(UltimateEvent.DIED);
+    ChangeHeroAndPreloadNext();
+}
+
+rule: "When player dies, increment their death progress and change their hero if applicable"
+Event.OnDeath
+{
+  # Don't count suicides unless enabled
+  if (!SUICIDES_COUNT_TOWARDS_DEATHS) AbortIf(Attacker() == EventPlayer());
+  WaitUntil(IsAlive(EventPlayer()), 9999);
+  # If the player is far away from spawn points, they probably got rezzed and we shouldn't count this death
+  if (REZZED_DEATHS_DONT_COUNT) AbortIf(
+    SpawnPoints(TeamOf(EventPlayer()))
+    .All(sp => DistanceBetween(PositionOf(<Player>sp), PositionOf(EventPlayer())) > 0.25)
+  );
+  deathProgress += 1;
+  if (deathProgress >= DEATHS_TO_SWITCH_HERO)
+    ChangeHeroAndPreloadNext();
+}
+

@@ -34,8 +34,9 @@
 // }
 import "../OSTWUtils/UltimateChargeConversion.del";
 globalvar Boolean RETAIN_ULT_CHARGE = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Retain Ultimate Charge", true);
-globalvar Boolean INITIAL_MYSTERY_HERO = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Force Initial Mystery Hero", false, 1);
-globalvar Hero MYSTERY_HERO_TO_FORCE = WorkshopSettingHero("Mystery Heroes + Ultimate", "Hero to Force", Hero.Echo, 2);
+globalvar Boolean INITIAL_MYSTERY_HERO = WorkshopSettingToggle(DEBUG_SETTING_CATEGORY, "Force Initial Mystery Hero", false, 1);
+// Need to manually set category because of bug with OSTW compilation
+globalvar Hero MYSTERY_HERO_TO_FORCE = WorkshopSettingHero(" DEBUG", "Initial Hero to Force", Hero.Echo, 2);
 
 playervar Boolean HasForcedBefore;
 
