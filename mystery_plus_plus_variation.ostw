@@ -32,7 +32,7 @@
 //     }
 //   }
 // }
-
+import "OSTWUtils/UltimateChargeConversion.del";
 globalvar Boolean RETAIN_ULT_CHARGE = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Retain Ultimate Charge", true);
 globalvar Boolean FORCE_MYSTERY_HERO = WorkshopSettingToggle("Mystery Heroes + Ultimate", "Force Mystery Hero on Spawn", false, 1);
 globalvar Hero MYSTERY_HERO_TO_FORCE = WorkshopSettingHero("Mystery Heroes + Ultimate", "Hero to Force", Hero.Echo, 2);
@@ -141,7 +141,7 @@ void ChooseNewMainHero() playervar "[SUB] Choose a new main hero for the player"
 
   trueHero = allowedHeroSwaps.Random();
   if (HeroOf() == Hero.Dva) WaitUntil(UltimateChargePercent() > 0, 0.25);
-  ultChargeStore = UltimateChargePercent(EventPlayer());
+  ultChargeStore = UltimateChargeConversion.UltimatePoints(HeroOf(EventPlayer()), UltimateChargePercent(EventPlayer()));
   if (DEBUG_MODE && FORCE_MYSTERY_HERO && !HasForcedBefore) {
     trueHero = MYSTERY_HERO_TO_FORCE;
     HasForcedBefore = true;
@@ -153,5 +153,5 @@ void ChooseNewMainHero() playervar "[SUB] Choose a new main hero for the player"
 void RestoreUltCharge() playervar "[SUB] Restore ultimate charge"
 {
   WaitUntil(UltimateChargePercent() > 0 || ultChargeStore == 0, 1000000);
-  SetUltimateCharge(EventPlayer(), RETAIN_ULT_CHARGE ? ultChargeStore : Min(ultChargeStore, 15));
+  SetUltimateCharge(EventPlayer(), Min(UltimateChargeConversion.ChargePercentFromPoints(HeroOf(), ultChargeStore), RETAIN_ULT_CHARGE ? 100 : 15));
 }
