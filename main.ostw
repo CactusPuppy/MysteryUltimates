@@ -109,6 +109,10 @@ if (HeroOf() == true)
 if (ultimateState == UltimateState.NORMAL)
 if (trueHero != HeroOf())
 {
+  # In Mystery Everything, we might be waiting for D.Va's ult charge to be properly read
+  if (ACTIVE_VARIATION == MUVariation.MYSTERY_EVERYTHING && HeroOf() == Hero.Dva) {
+    WaitUntil(trueHero == HeroOf(), 0.5);
+  }
   trueHero = HeroOf();
 
   # Prevent swapping to a different role
