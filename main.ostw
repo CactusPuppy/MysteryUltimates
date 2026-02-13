@@ -30,7 +30,8 @@ globalvar Hero DEBUG_ULTIMATE_HERO = WorkshopSettingHero(DEBUG_SETTING_CATEGORY,
 globalvar Boolean DEBUG_LOG_EVENTS = WorkshopSettingToggle(DEBUG_SETTING_CATEGORY, "Log Events to Inspector (*doesn't need debug mode on)", false, 3);
 globalvar Boolean DEBUG_SHOW_CURRENT_STATE = WorkshopSettingToggle(DEBUG_SETTING_CATEGORY, "Show Current State", false, 4);
 
-globalvar Hero[] placeableUltimateHeroes = [Hero.Baptiste, Hero.Symmetra, Hero.Lifeweaver, Hero.Wuyang];
+globalvar Hero[] placeableUltimateHeroes = [Hero.Baptiste, Hero.Symmetra, Hero.Lifeweaver, Hero.Wuyang, Hero.JetpackCat];
+globalvar Hero[] ultAgainCancelsUlt: [Hero.Wuyang, Hero.JetpackCat];
 globalvar Hero[] ability1AllowedHeroes = [Hero.Dva, Hero.Echo];
 globalvar Hero[] ability2AllowedHeroes = [];
 
@@ -91,7 +92,7 @@ Event.OngoingPlayer
 if (SHOW_ULTIMATE_HERO)
 {
   OnScreenText.CreateOnScreenText(
-    VisibleTo: ultimateHero && ultimateState == UltimateState.NORMAL && UltimateChargePercent() == 100 ? EventPlayer() : null,
+    VisibleTo: ultimateHero && ultimateState == UltimateState.NORMAL && UltimateChargePercent() >= 100 ? EventPlayer() : null,
     Header: <"<0>: <1>", HeroIconString(ultimateHero), AbilityIconString(ultimateHero, Button.Ultimate)>,
     PositionX: 0,
     PositionY: -0.9,
@@ -184,7 +185,7 @@ rule: "When player earns their ult, if ultimateHero is not their trueHero, add p
 Event.OngoingPlayer
 if (HasSpawned())
 if (ultimateState == UltimateState.NORMAL)
-if (UltimateChargePercent() == 100)
+if (UltimateChargePercent() >= 100)
 if (ultimateHero != trueHero)
 {
   ultimatePreparedPlayers.ModAppend(EventPlayer());
@@ -241,6 +242,9 @@ void SetStallDuration() playervar "[SUB]: Set cast stall duration"
     case Hero.Zarya:
       ultCastStallDuration = 0.75;
       break;
+    case Hero.JetpackCat:
+      ultCastStallDuration = 0.5;
+      break;
   }
 }
 
@@ -281,6 +285,9 @@ void SetLingerDuration() playervar "[SUB]: Set linger duration"
     case Hero.Freja:
       extendedUltDuration = 3;
       break;
+    case Hero.Anran:
+      extendedUltDuration = 3;
+      break;
   }
 }
 
@@ -290,7 +297,7 @@ if (DEBUG_MODE)
 if (DEBUG_MELEE_FOR_ULT_CHARGE)
 if (IsButtonHeld(EventPlayer(), Button.Melee))
 {
-  SetUltimateCharge(EventPlayer(), Min(100, UltimateChargePercent(EventPlayer()) + 25));
+  SetUltimateCharge(EventPlayer(), UltimateChargePercent(EventPlayer()) + 25);
 }
 
 globalvar Boolean IsInSlowMotion;

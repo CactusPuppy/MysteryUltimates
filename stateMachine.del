@@ -81,6 +81,7 @@ void UltEventHandler_Normal() playervar "[stateMachine.del] Handle event for NOR
 {
   switch (ultimateEvent) {
     case UltimateEvent.ULT_ACTIVATION:
+      additionalUltCharge = UltimateChargePercent() - 100;
       DisallowButton(EventPlayer(), Button.Ability1);
       DisallowButton(EventPlayer(), Button.Ability2);
 
@@ -295,16 +296,17 @@ void OverwriteHeroSwapUltTransfer() playervar "[stateMachine.del] Prevent granti
 {
   WaitUntil(UltimateChargePercent() > 0 || IsDead(), 1);
   AbortIf(IsDead());
-  SetUltimateCharge(EventPlayer(), 0);
+  SetUltimateCharge(EventPlayer(), additionalUltCharge);
 }
 
 /* === Event Triggers === */
 
+playervar Number additionalUltCharge;
 rule: "When the player presses their ult button in NORMAL mode, activate ult"
 Event.OngoingPlayer
 if (IsAlive())
 if (ultimateState == UltimateState.NORMAL)
-if (UltimateChargePercent() == 100)
+if (UltimateChargePercent() >= 100)
 if (trueHero != ultimateHero)
 if (IsButtonHeld(EventPlayer(), Button.Ultimate))
 if (IsAbilitiesLocked() == false)
@@ -363,12 +365,12 @@ if (UltimateChargePercent() > 0)
   LoopIfConditionIsTrue();
 }
 
-rule: "Continually attempt to use ult while in the preparing ult state and the player is in the activating ult state"
+rule: "Continually attempt to use ult while in the preparing ult state and the player is in the activating ult state" 1
 Event.OngoingPlayer
 if (ultimateState == UltimateState.PREPARING_ULT)
 if (preparingUltState != PreparingUltState.STALLING)
 if (placeableUltimateHeroes.Contains(HeroOf()) == false)
-if (UltimateChargePercent() == 100)
+if (UltimateChargePercent() >= 100)
 {
   PressButton(EventPlayer(), Button.Ultimate);
   Wait(0.05, WaitBehavior.AbortWhenFalse);
@@ -401,7 +403,8 @@ if (!IsDuplicating(EventPlayer()))
   LoopIfConditionIsTrue();
 }
 
-rule: "While attempting to cast ult, if player has an placeable ult and they cancel it, bring it back up"
+playervar Boolean artificialButtonPressFlag;
+rule: "While attempting to cast ult, if player has an placeable ult and they cancel it, bring it back up" 1
 Event.OngoingPlayer
 if (ultimateState == UltimateState.PREPARING_ULT)
 if (placeableUltimateHeroes.Contains(HeroOf()))
@@ -410,20 +413,25 @@ if (IsButtonHeld(EventPlayer(), Button.SecondaryFire))
   AbortIf(IsUsingUltimate(EventPlayer()));
   Wait(0.25);
   PressButton(EventPlayer(), Button.Ultimate);
+  artificialButtonPressFlag = true;
 }
 
-rule: "If Wuyang presses their ult button while in the preparing ult state, bring ult back"
+rule: "If a hero who can press ult to cancel ult presses their ult button while in the preparing ult state, bring ult back" 2
 Event.OngoingPlayer
 if (IsButtonHeld(EventPlayer(), Button.Ultimate))
 {
-  AbortIf(HeroOf() != Hero.Wuyang || ultimateState != UltimateState.PREPARING_ULT);
+  if (artificialButtonPressFlag) {
+    artificialButtonPressFlag = false;
+    return;
+  }
+  AbortIf(!ultAgainCancelsUlt.Contains(HeroOf()) || ultimateState != UltimateState.PREPARING_ULT || preparingUltState == PreparingUltState.STALLING);
   Wait(0.25);
   PressButton(EventPlayer(), Button.Ultimate);
   # Prevent retriggering this rule
   MinWait();
 }
 
-rule: "While attempting to cast ult, if player has a placeable ult and they get hard CC'd, bring it back up when they are no longer afflicted"
+rule: "While attempting to cast ult, if player has a placeable ult and they get hard CC'd, bring it back up when they are no longer afflicted" 1
 Event.OngoingPlayer
 if (ultimateState == UltimateState.PREPARING_ULT)
 if (placeableUltimateHeroes.Contains(HeroOf()))
@@ -431,6 +439,7 @@ if (IsAbilitiesLocked())
 {
   WaitUntil(IsAbilitiesLocked() == false, 1000000);
   PressButton(EventPlayer(), Button.Ultimate);
+  artificialButtonPressFlag = true;
 }
 
 rule: "When the player dies, issue the appropriate events"
