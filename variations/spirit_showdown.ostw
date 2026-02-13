@@ -50,7 +50,7 @@ rule: "Global credit HUD"
 {
   CreateHudText(
     VisibleTo: AllPlayers(),
-    Header: " Code: ????? ",
+    Header: " Code: 5AOE2 ",
     Subheader: <"<0> Mystery Ultimate Showdown", IconString(Icon.QuestionMark)>,
     Text: "By CactusPuppy",
     Location: Location.Right,
