@@ -1,0 +1,204 @@
+{
+  "ultimateWeights": [
+    {
+      "hero": { "hero": "Reaper" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Tracer" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Mercy" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Hanzo" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Torbjörn" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Reinhardt" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Pharah" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Winston" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Widowmaker" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Bastion" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Symmetra" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Zenyatta" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Genji" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Roadhog" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Cassidy" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Junkrat" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Zarya" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Soldier: 76" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Lúcio" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "D.Va" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Mei" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Sombra" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Doomfist" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Ana" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Orisa" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Brigitte" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Moira" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Wrecking Ball" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Sojourn" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Ashe" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Echo" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Baptiste" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Kiriko" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Junker Queen" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Sigma" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Ramattra" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Lifeweaver" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Mauga" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Illari" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Freja" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Venture" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Hazard" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Juno" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Wuyang" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Vendetta" },
+      "weight": 1
+    },
+    {
+      "hero": { "hero": "Domina" },
+      "weight": 3
+    },
+    {
+      "hero": { "hero": "Emre" },
+      "weight": 3
+    },
+    {
+      "hero": { "hero": "Anran" },
+      "weight": 3
+    },
+    {
+      "hero": { "hero": "Mizuki" },
+      "weight": 3
+    },
+    {
+      "hero": { "hero": "Jetpack Cat" },
+      "weight": 3
+    }
+  ]
+}

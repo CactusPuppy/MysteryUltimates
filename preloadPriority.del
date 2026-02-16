@@ -9,8 +9,6 @@ globalvar Player[] awaitingReturnPlayers = [];
 globalvar Player[] finalPriorityList;
 globalvar Player[] draftPriorityList;
 
-globalvar Number i;
-
 void ProcessNewPriorityList() "[preloadPriority.del] Generate a new preload priority list and preload the right players"
 {
   # Generate the draft priority list

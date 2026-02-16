@@ -50,7 +50,7 @@ playervar Number dominoesCooldown;
 playervar Boolean triggerDomino;
 playervar Number dominoesDelay;
 
-rule: "Set variation - Dominaoes"
+rule: "Set variation - Dominoes"
 if (ACTIVE_VARIATION == MUVariation.CLASSIC)
 {
   ACTIVE_VARIATION = MUVariation.DOMINOES;

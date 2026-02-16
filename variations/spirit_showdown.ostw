@@ -8,6 +8,7 @@ globalvar Boolean FORCE_INITIAL_HERO = WorkshopSettingToggle(DEBUG_SETTING_CATEG
 globalvar Boolean MYSTERY_HERO_TO_FORCE = WorkshopSettingHero(" DEBUG", "Showdown - Initial Hero to Force", Hero.Echo, 101);
 globalvar Number KILLS_TO_SWITCH_HERO = WorkshopSettingInteger(SPIRIT_SHOWDOWN_SETTINGS_CATEGORY, "Kills to Switch Hero", 1, 1, 10, 0);
 globalvar Number DEATHS_TO_SWITCH_HERO = WorkshopSettingInteger(SPIRIT_SHOWDOWN_SETTINGS_CATEGORY, "Deaths to Switch Hero", 2, 1, 10, 1);
+globalvar Number ASSISTS_TO_SWITCH_HERO = WorkshopSettingInteger(SPIRIT_SHOWDOWN_SETTINGS_CATEGORY, "Assists to Switch Hero", 3, 1, 10, 2);
 globalvar Boolean SUICIDES_COUNT_TOWARDS_DEATHS = WorkshopSettingToggle(SPIRIT_SHOWDOWN_SETTINGS_CATEGORY, "Suicides Count Towards Deaths", true, 3);
 globalvar Boolean REZZED_DEATHS_DONT_COUNT = WorkshopSettingToggle(SPIRIT_SHOWDOWN_SETTINGS_CATEGORY, "Resurrections Undo Deaths", false, 4);
 globalvar Hero[] TankHeroOrder = AllTankHeroes().Randomize();
@@ -78,7 +79,6 @@ Event.OnPlayerJoin
 {
   InitializePlayerHeroIndex();
 }
-
 
 
 void InitializePlayerHeroIndex() playervar "[SUBROUTINE] Initialize player hero index"
@@ -158,10 +158,21 @@ if (AreButtonsLocked == true)
 
 }
 
+Number AssistCount(Player p = EventPlayer()): PlayerStat(p, PlayerStat.DefensiveAssists) + PlayerStat(p, PlayerStat.OffensiveAssists);
+playervar Number assistCount;
+rule: "Update assistCount"
+Event.OngoingPlayer
+if (assistCount < AssistCount())
+{
+  assistCount = AssistCount();
+  MinWait();
+  LoopIfConditionIsTrue();
+}
 playervar Number previousUltPoints;
 playervar Any HeroChangeVFX;
 void ChangeHeroAndPreloadNext() playervar "[SUBROUTINE] Change player's hero to their current hero index and preload the next hero"
 {
+  WaitUntil(ultimateState == UltimateState.NORMAL, 1000000);
   killProgress = 0;
   deathProgress = 0;
   previousUltPoints = UltimateChargeConversion.UltimatePoints(HeroOf(EventPlayer()), UltimateChargePercent(EventPlayer()));
@@ -174,6 +185,7 @@ void ChangeHeroAndPreloadNext() playervar "[SUBROUTINE] Change player's hero to 
   SetStatus(EventPlayer(), null, Status.PhasedOut, 1);
   PreloadHero(EventPlayer(), AvailableHeroes[NextHeroIndex()]);
   MinWait();
+  lastAssistCount = assistCount;
   HeroChangeVFX = CreateEffect(AllPlayers(), Effect.EchoCloningEffect, TeamOf(EventPlayer()), EventPlayer(), 1, EffectRev.VisibleToPositionAndRadius);
   Wait(0.25 - 0.016, WaitBehavior.IgnoreCondition);
   SetUltimateCharge(
@@ -194,6 +206,7 @@ if (!IsAssemblingHeroes())
 
 playervar Number killProgress;
 playervar Number deathProgress;
+playervar Number lastAssistCount;
 rule: "When player earns a final blow, increment their hero index and change their hero"
 Event.OnFinalBlow
 {
@@ -219,3 +232,24 @@ Event.OnDeath
     ChangeHeroAndPreloadNext();
 }
 
+rule: "Create HUD showing assist count"
+Event.OngoingPlayer
+{
+  CreateHudText(
+    VisibleTo: EventPlayer(),
+    Subheader: <"Assists: <0>/<1>", Min(assistCount - lastAssistCount, ASSISTS_TO_SWITCH_HERO), ASSISTS_TO_SWITCH_HERO>,
+    Location: Location.Left,
+    SortOrder: -11,
+    Reevaluation: HudTextRev.VisibleToAndString,
+    Spectators: Spectators.VisibleNever
+  );
+}
+
+rule: "When player's assist count becomes high enough, change hero after a short delay"
+Event.OngoingPlayer
+if (assistCount >= lastAssistCount + ASSISTS_TO_SWITCH_HERO)
+{
+  BigMessage(EventPlayer(), "Prepare to Switch Hero!");
+  Wait(3, WaitBehavior.AbortWhenFalse);
+  ChangeHeroAndPreloadNext();
+}

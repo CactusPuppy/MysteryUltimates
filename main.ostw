@@ -1,6 +1,6 @@
+
+
 import "trackAbilityLockout.del";
-
-
 import "OSTWUtils/OnScreenText.del";
 import "stateMachine.del";
 
@@ -59,18 +59,35 @@ rule: "If not in DEBUG_MODE, disable inspector recording"
   }
 }
 
+struct HeroUltimateWeight {
+  public Hero hero;
+  public Number weight;
+}
+globalvar HeroUltimateWeight[] rawHeroWeights = import("ultimateWeights.json").ultimateWeights;
+globalvar Hero[] ultimatePool = [];
+globalvar Number i;
+globalvar Number j;
+
+rule: "Initialize ultimate pool"
+{
+  for (i = 0; rawHeroWeights.Length; 1) {
+    for (j = 0; rawHeroWeights[i].weight; 1) {
+      ultimatePool.ModAppend(rawHeroWeights[i].hero);
+    }
+  }
+}
+
 rule: "If should show current state, display it"
 Event.OngoingPlayer
 if (DEBUG_MODE)
-if (DEBUG_SHOW_CURRENT_STATE)
 {
   CreateHudText(
-    VisibleTo: EventPlayer(),
+    VisibleTo: DEBUG_SHOW_CURRENT_STATE ? EventPlayer() : null,
     Subheader: <"Current State: <0>", ultimateState>,
     Location: Location.Left,
     SubheaderColor: Color.White,
     Reevaluation: HudTextRev.VisibleToAndString,
-    Spectators: Spectators.VisibleNever
+    Spectators: Spectators.VisibleAlways
   );
 }
 
@@ -140,15 +157,15 @@ void ChooseNewUltimateHero() playervar "[SUB]: Choose a new ultimateHero"
   if (DEBUG_MODE && DEBUG_SHOULD_FORCE_ULTIMATE_HERO) {
     ultimateHero = DEBUG_ULTIMATE_HERO;
   } else {
-    eligibleHeroSwaps = AllHeroes();
+    eligibleHeroSwaps = ultimatePool;
 
     if (RANDOM_ULTIMATE_MATCHES_ROLE) {
-      if (AllTankHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllTankHeroes();
-      else if (AllDamageHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllDamageHeroes();
-      else if (AllSupportHeroes().Contains(HeroOf())) eligibleHeroSwaps = AllSupportHeroes();
+      if (AllTankHeroes().Contains(HeroOf())) eligibleHeroSwaps = eligibleHeroSwaps.Filter(h => AllTankHeroes().Contains(h));
+      else if (AllDamageHeroes().Contains(HeroOf())) eligibleHeroSwaps = eligibleHeroSwaps.Filter(h => AllTankHeroes().Contains(h));
+      else if (AllSupportHeroes().Contains(HeroOf())) eligibleHeroSwaps = eligibleHeroSwaps.Filter(h => AllSupportHeroes().Contains(h));
     }
 
-    if (FORCE_NON_NATIVE_ULTIMATE) eligibleHeroSwaps.ModRemoveByValue(HeroOf());
+    if (FORCE_NON_NATIVE_ULTIMATE) eligibleHeroSwaps = eligibleHeroSwaps.Filter(h => h != HeroOf());
 
     ultimateHero = RandomValueInArray(eligibleHeroSwaps);
   }
